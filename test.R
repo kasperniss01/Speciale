@@ -83,3 +83,5 @@ gamma_hat <- function(B, data, ...) {
 
 
 
+
+
