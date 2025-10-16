@@ -65,6 +65,8 @@ estimate_stat <- function(data, n, L, B,
   I <- complex(real = 0, imaginary = 1)
   
   Gamma <- complex(length.out = B)
+  Covvar_Est <- list()
+  
   
   p <- 5
   
@@ -192,25 +194,77 @@ estimate_stat <- function(data, n, L, B,
     lambda <- resX * resY
     
     # browser()
+    var_contrib <- 0
+    for(t in 1:(n-1)) {
+      lambda_t <- lambda[t, ]
+      
+      var_contrib <- var_contrib + (c(Re(lambda_t), Im(lambda_t)) %*% 
+        t(c(Re(lambda_t), Im(lambda_t))))
+
+    }
+    Covvar_Est[[l]] <- var_contrib
+    
     
     Gamma <- Gamma + colSums(resX * resY)
   }
   
+  # browser()
+  Covvar_Est <- Reduce("+", Covvar_Est) /  ((n - 1) * (L - 1))
+  
   Gamma_hat <- Gamma / ((n - 1) * (L - 1))
   S_hat <- sqrt((n - 1) * (L - 1)) * max(pmax(Re(Gamma_hat), Im(Gamma_hat)))
   
-  S_hat
+  return(list( S_hat = S_hat, Covvar_Est = Covvar_Est))
 }
 
-sim <- simulate_AR_process(gamma = 0, 
-                           n = 20, 
-                           burnin = 50, 
-                           A = matrix(c(0.1, 0.7, -0.1, 0.3), nrow = 2))
 
-estimate_stat(data = sim, n = 10, L = 2, B = 5, lgb_params = list(learning_rate = 0.05,
+
+est_stat <- estimate_stat(data = sim, n = 10, L = 3, B = 5, lgb_params = list(learning_rate = 0.05,
                                                                   num_leaves = 31,
                                                                   verbose = -1))
 
+sim_crit_value <- function(n = 1e3, covvar_est, alpha = 0.05) {
+  B <- nrow(covvar_est) / 2
+  dist <- replicate(n, {
+    Z <- rnorm(2 * B)
+    
+    root_covvar_est <- chol(covvar_est)
+    pmax(root_covvar_est %*% Z)
+  })
+  
+  quantile(dist, 1 - alpha/2)
+}
+
+sim_crit_value(1e5, est_stat$Covvar_Est, 0.05)
+
+
+sim <- simulate_AR_process(gamma = 0, 
+                           n = 30, 
+                           burnin = 50, 
+                           A = matrix(c(0.1, 0.7, -0.1, 0.3), nrow = 2))
+
+Tlen <- 500
+rej_values <- replicate(100, {
+  i <- 1
+  data_sim <- simulate_AR_process(gamma = 0, 
+                                  n = Tlen, 
+                                  burnin = 0, 
+                                  A = matrix(c(0.1, 0.7, -0.1, 0.3), nrow = 2))
+  
+  est_stat_sim <- estimate_stat(data = data_sim, n = 100, L = 5, B = 10)
+  S_hat_sim <- est_stat_sim$S_hat
+  Covvar_est_sim <- est_stat_sim$Covvar_Est
+  
+  crit_val <- sim_crit_value(covvar_est = Covvar_est_sim, alpha = 0.05)
+  
+  reject <- S_hat_sim > crit_val
+  if(i %% 10 == 0) print(i)
+  i <- i + 1
+  
+  reject
+
+})
+ 
 
 
 

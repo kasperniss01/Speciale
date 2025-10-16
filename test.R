@@ -1,3 +1,6 @@
+library(tidyverse)
+library(lightgbm)
+
 simulate_AR_process <- function(n, 
                                 d = 1, #dimension of Y-process
                                 gamma = 0, #controls H_0 or H_A
@@ -55,7 +58,7 @@ cor(rx, ry) #near 0 under H_0?, otherwise not
 ### n and L so that T = nL
 n <- 10
 L <- 100
-Time <- n + L
+Tlen <- n + L
 
 ### function to estimate gamma
 gamma_hat <- function(B, data, ...) {
@@ -68,11 +71,12 @@ gamma_hat <- function(B, data, ...) {
   
   I <- complex(real = 0, imaginary = 1)
   
-  Gamma_hat <- list()
+  Gamma_hat <- list("list", B)
   
   #loop over bs
   for (b in 1:B) { 
-    Gamma_hat[b] <- exp(I * nu[b] * X)
+    cc_X <- exp(I * mu[b] * X)
+    cc_Y <- exp(I * nu[b] %*% Y) %>% drop()
   }
   
   Gamma_hat
