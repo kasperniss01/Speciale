@@ -193,13 +193,10 @@ estimate_stat <- function(data, n, L, B,
     
     lambda <- resX * resY
     
-    # browser()
-    var_contrib <- 0
-    for(t in 1:(n-1)) {
-      lambda_t <- lambda[t, ]
-      
-      var_contrib <- var_contrib + (c(Re(lambda_t), Im(lambda_t)) %*% 
-        t(c(Re(lambda_t), Im(lambda_t))))
+    var_contrib <- matrix(0, 2 * B, 2 * B)
+    for(t in 1:(n - 1)) {
+      vv <- c(Re(lambda[t, ]), Im(lambda[t, ]))
+      var_contrib <- var_contrib + (vv %o% vv)
 
     }
     Covvar_Est[[l]] <- var_contrib
@@ -208,11 +205,10 @@ estimate_stat <- function(data, n, L, B,
     Gamma <- Gamma + colSums(resX * resY)
   }
   
-  # browser()
-  Covvar_Est <- Reduce("+", Covvar_Est) /  ((n - 1) * (L - 1))
+  Covvar_Est <- Reduce("+", Covvar_Est) / ((n - 1) * (L - 1))
   
   Gamma_hat <- Gamma / ((n - 1) * (L - 1))
-  S_hat <- sqrt((n - 1) * (L - 1)) * max(pmax(Re(Gamma_hat), Im(Gamma_hat)))
+  S_hat <- sqrt((n - 1) * (L - 1)) * max(abs(Re(Gamma_hat)), abs(Im(Gamma_hat)))
   
   return(list( S_hat = S_hat, Covvar_Est = Covvar_Est))
 }
@@ -228,11 +224,11 @@ sim_crit_value <- function(n = 1e3, covvar_est, alpha = 0.05) {
   dist <- replicate(n, {
     Z <- rnorm(2 * B)
     
-    root_covvar_est <- chol(covvar_est)
-    pmax(root_covvar_est %*% Z)
+    root_covvar_est <- t(chol(covvar_est))
+    max(abs(root_covvar_est %*% Z))
   })
   
-  quantile(dist, 1 - alpha/2)
+  unname(quantile(dist, 1 - alpha/2))
 }
 
 sim_crit_value(1e5, est_stat$Covvar_Est, 0.05)
