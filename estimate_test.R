@@ -240,8 +240,7 @@ sim <- simulate_AR_process(gamma = 0,
                            A = matrix(c(0.1, 0.7, -0.1, 0.3), nrow = 2))
 
 Tlen <- 500
-rej_values <- replicate(100, {
-  i <- 1
+for(k in 1:100) {
   data_sim <- simulate_AR_process(gamma = 0, 
                                   n = Tlen, 
                                   burnin = 0, 
@@ -254,13 +253,12 @@ rej_values <- replicate(100, {
   crit_val <- sim_crit_value(covvar_est = Covvar_est_sim, alpha = 0.05)
   
   reject <- S_hat_sim > crit_val
-  if(i %% 10 == 0) print(i)
-  i <- i + 1
-  
-  reject
+  if(k %% 10 == 0) print(k)
 
-})
- 
+
+}
+
+reject
 
 
 
