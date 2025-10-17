@@ -70,12 +70,14 @@ estimate_stat <- function(data, n, L, B,
   I <- complex(real = 0, imaginary = 1)
   
   Gamma <- complex(length.out = B)
-  Covvar_Est <- list()
+  Covvar_est <- matrix(0, 2 * B, 2 * B)
   
   
   p <- 5
   
   for (l in 1:(L - 1)) {
+    browser()
+    
     # indices for training and evalution
     index_train <- II_bar_l(Tlen, n, L, l, p)
     index_eval <- II_l(Tlen, n, L, l)
@@ -198,24 +200,22 @@ estimate_stat <- function(data, n, L, B,
     
     lambda <- resX * resY
     
-    var_contrib <- matrix(0, 2 * B, 2 * B)
-    for(t in 1:(n - 1)) {
-      vv <- c(Re(lambda[t, ]), Im(lambda[t, ]))
-      var_contrib <- var_contrib + (vv %o% vv)
-
-    }
-    Covvar_Est[[l]] <- var_contrib
+    Lambda_mat <- cbind(Re(lambda), Im(lambda))
+    var_contrib <- crossprod(Lambda_mat)
+    
+    Covvar_est <- Covvar_est +  var_contrib
     
     
     Gamma <- Gamma + colSums(resX * resY)
   }
   
-  Covvar_Est <- Reduce("+", Covvar_Est) / ((n - 1) * (L - 1))
-  
+  Covvar_est <- Covvar_est / ((n - 1) * (L - 1))
   Gamma_hat <- Gamma / ((n - 1) * (L - 1))
+  
+  
   S_hat <- sqrt((n - 1) * (L - 1)) * max(abs(Re(Gamma_hat)), abs(Im(Gamma_hat)))
   
-  return(list( S_hat = S_hat, Covvar_Est = Covvar_Est))
+  return(list( S_hat = S_hat, Covvar_est = Covvar_est))
 }
 
 
@@ -260,7 +260,7 @@ for(k in 1:n_sim) {
   
   est_stat_sim <- estimate_stat(data = data_sim, n = 100, L = 5, B = 10)
   S_hat_sim <- est_stat_sim$S_hat
-  Covvar_est_sim <- est_stat_sim$Covvar_Est
+  Covvar_est_sim <- est_stat_sim$Covvar_est
   
   crit_val <- sim_crit_value(covvar_est = Covvar_est_sim, alpha = 0.05)
   
