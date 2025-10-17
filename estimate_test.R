@@ -5,6 +5,9 @@ library(lightgbm)
 source("helper_functions.R")
 
 estimate_stat <- function(data, n, L, B, 
+                          # simulate mu and nu 
+                          mu <- matrix(rnorm(B), ncol = 1),
+                          nu <- matrix(rnorm(B * d), ncol = d),
                           num_rounds_for_train = 300,
                           p = 5,
                           lgb_params = list()) {
@@ -14,10 +17,6 @@ estimate_stat <- function(data, n, L, B,
   
   Tlen <- nrow(data)
   d <- ncol(Ymat)
-  
-  # simulate mu and nu 
-  mu <- matrix(rnorm(B), ncol = 1)
-  nu <- matrix(rnorm(B * d), ncol = d)
   
   Gamma <- complex(length.out = B)
   Covvar_Est <- list()
