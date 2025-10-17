@@ -20,7 +20,7 @@ Covariance_Xt_Yt <- function(a, b, c, t) {
 
 mean_conditional_Y_given_X <- function(a, b, c, t, x_t) {
   cov_Xt_Yt <- Covariance_Xt_Yt(a, b, c, t)
-  var_Xt <- variance_Xt(a, b, c, t)
+  var_Xt <- variance_Xt(a, t)
   
   cov_Xt_Yt / var_Xt * x_t
 }
@@ -28,7 +28,7 @@ mean_conditional_Y_given_X <- function(a, b, c, t, x_t) {
 variance_conditional_Y_given_X <- function(a, b, c, t) {
   var_Yt <- variance_Y_t(a, b, c, t)
   cov_Xt_Yt <- Covariance_Xt_Yt(a, b, c, t)
-  var_Xt <- variance_Xt(a, b, c, t)
+  var_Xt <- variance_Xt(a, t)
   
   var_Yt - cov_Xt_Yt^2 / var_Xt
 }
