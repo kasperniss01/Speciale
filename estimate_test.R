@@ -19,8 +19,6 @@ estimate_stat <- function(data, n, L, B,
   mu <- matrix(rnorm(B), ncol = 1)
   nu <- matrix(rnorm(B * d), ncol = d)
   
-  I <- complex(real = 0, imaginary = 1)
-  
   Gamma <- complex(length.out = B)
   Covvar_Est <- list()
   
