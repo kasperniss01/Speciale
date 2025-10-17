@@ -35,7 +35,6 @@ variance_conditional_Y_given_X <- function(a, b, c, t) {
 }
 
 
-
 ### Char. func.
 char_func_conditional_Y_given_X <- function(a, b, c, t, x_t, u) {
   mean_cond <- mean_conditional_Y_given_X(a, b, c, t, x_t)
@@ -44,7 +43,11 @@ char_func_conditional_Y_given_X <- function(a, b, c, t, x_t, u) {
   exp(1i * u * mean_cond - 0.5 * u^2 * var_cond)
 }
 
-
+char_func_conditional_X_next_given_X_previous <- function(a, b, c, t, x_prev, u) {
+  mean_X_next_given_X_prev <- a * x_prev
+  
+  exp(1i * u * mean_X_next_given_X_prev - 0.5 * u^2)
+}
 
 
 
