@@ -23,7 +23,7 @@ estimate_stat <- function(data, n, L, B,
   Covvar_Est <- list()
   
   for (l in 1:(L - 1)) {
-    # indices for training and evalution
+    # indices for training and evaluation
     index_train <- II_bar_l(Tlen, n, L, l, p)
     index_eval <- II_l(Tlen, n, L, l)
     
@@ -99,20 +99,7 @@ est_stat <- estimate_stat(data = sim, n = 100, L = 10, B = 5, lgb_params = list(
                                                                   num_leaves = 31,
                                                                   verbose = -1))
 
-sim_crit_value <- function(n = 1e3, covvar_est, alpha = 0.05) {
-  B <- nrow(covvar_est) / 2
-  dist <- replicate(n, {
-    Z <- rnorm(2 * B)
-    
-    root_covvar_est <- t(chol(covvar_est))
-    max(abs(root_covvar_est %*% Z))
-  })
-  
-  unname(quantile(dist, 1 - alpha/2))
-}
-
-sim_crit_value(1e5, est_stat$Covvar_Est, 0.05)
-
+##remove all this at some point
 
 sim <- simulate_AR_process(gamma = 0, 
                            n = 30, 
