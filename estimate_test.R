@@ -2,8 +2,7 @@ library(tidyverse)
 library(lightgbm)
 
 ### source helper functions
-source("~/Desktop/Skole/UNI/Kandidat/Speciale/speciale_git/helper_functions.R")
-
+source("helper_functions.R")
 
 estimate_stat <- function(data, n, L, B, 
                           num_rounds_for_train = 300,
