@@ -1,56 +1,14 @@
 library(tidyverse)
 library(lightgbm)
 
-### function to split timeseries into L blocks of size n
-make_blocks <- function(Tlen, n, L) {
-  stopifnot(Tlen == n * L)
-  split(seq_len(Tlen), rep(seq_len(L), each = n))
-}
+### source helper functions
+source("~/Desktop/Skole/UNI/Kandidat/Speciale/speciale_git/helper_functions.R")
 
-### fetch ell'th (l) block from the L blocks - corresponds to evaluation data
-II_l <- function(Tlen, n, L, l) { 
-  stopifnot(1 <= l & l <= L)
-  make_blocks(Tlen, n, L)[[l]]
-}
-
-### fetch l'th training data according to equation ??
-II_bar_l <- function(Tlen, n, L, l, p) {
-  idx_eval <- II_l(Tlen, n, L, l)
-  
-  left  <- max(1, min(idx_eval) - p)
-  right <- min(Tlen, max(idx_eval) + p)
-  
-  setdiff(seq_len(Tlen), left:right)
-}
-
-#get pairs (t, t + 1) such that both entries are training points
-pairs_from_mask <- function(in_mask) {
-  Tlen <- length(in_mask)
-  which(in_mask[-Tlen] & in_mask[-1])
-}
-
-# lightgbm wrapper with sane defaults
-fit_lgb <- function(X, y, num_round = 300, params = list()) {
-  dtrain <- lgb.Dataset(data = as.matrix(X), label = y)
-  default <- list(
-    objective = "regression_l2",
-    learning_rate = 0.05, # what is all this
-    num_leaves = 31,
-    min_data_in_leaf = 20,
-    feature_fraction = 0.9,
-    bagging_fraction = 0.8,
-    bagging_freq = 1,
-    verbose = -1,
-    seed = 1
-  )
-  params <- modifyList(default, params)
-  lgb.train(params = params, data = dtrain, nrounds = num_round)
-}
 
 estimate_stat <- function(data, n, L, B, 
                           num_rounds_for_train = 300,
+                          p = 5,
                           lgb_params = list()) {
-  # browser()
   X <- data$X
   Y <- data$Y #perhaps use the function that greps Y-matrix
   Ymat <- if (is.matrix(Y)) Y else cbind(Y)
@@ -59,7 +17,7 @@ estimate_stat <- function(data, n, L, B,
   d <- ncol(Ymat)
   
   # simulate mu and nu 
-  mu <- rnorm(B)
+  mu <- matrix(rnorm(B), ncol = 1)
   nu <- matrix(rnorm(B * d), ncol = d)
   
   I <- complex(real = 0, imaginary = 1)
@@ -67,125 +25,51 @@ estimate_stat <- function(data, n, L, B,
   Gamma <- complex(length.out = B)
   Covvar_Est <- list()
   
-  
-  p <- 5
-  
   for (l in 1:(L - 1)) {
     # indices for training and evalution
     index_train <- II_bar_l(Tlen, n, L, l, p)
     index_eval <- II_l(Tlen, n, L, l)
     
+    ### stuff for phi
     #masking indices
     in_train <- rep(FALSE, Tlen)
     in_train[index_train] <- TRUE
     
-    ### φ training
-    # φ training pairs: both t and t+1 must be in training region
+    # phi training pairs: both t and t+1 must be in training region
     index_train_phi  <- pairs_from_mask(in_train) 
     shifted_index_train_phi <- index_train_phi + 1
     
     X_train_phi <- X[index_train_phi]
     X_shifted_train_phi <- X[shifted_index_train_phi]
     
-    N_train_phi <- length(X_train_phi)
-    
-    phi_features_train <- cbind(
-      x = rep(X_train_phi, times = B),
-      mu = rep(mu, each = N_train_phi)
-    )
-    
-    phi_real_response <- cos(rep(mu, each = N_train_phi) * rep(X_shifted_train_phi, times = B))
-    phi_imag_response <- sin(rep(mu, each = N_train_phi) * rep(X_shifted_train_phi, times = B))
-    
-    model_phi_real <- fit_lgb(phi_features_train, phi_real_response, num_round = num_rounds_for_train, params = lgb_params)
-    model_phi_imag <- fit_lgb(phi_features_train, phi_imag_response, num_round = num_rounds_for_train, params = lgb_params)
-    
-    ### φ predictions
     index_eval_phi <- index_eval[1:(n - 1)]
     shifted_index_eval_phi <- index_eval_phi + 1
     
     X_eval_phi <- X[index_eval_phi]
     X_shifted_eval_phi <- X[shifted_index_eval_phi]
     
-    N_eval_phi <- length(index_eval_phi)
+    N_eval_phi <- length(X_eval_phi)
     
-    phi_features_eval <- cbind(
-      x = rep(X_eval_phi, times = B),
-      mu = rep(mu, each = N_eval_phi)
-    )
-    
-    # perform predictions
-    phi_real_hat_vec <- predict(model_phi_real, as.matrix(phi_features_eval))
-    phi_imag_hat_vec <- predict(model_phi_imag, as.matrix(phi_features_eval))
-    
-    #combine into complex estimates
-    phi_hat <- matrix(phi_real_hat_vec, nrow = N_eval_phi, ncol = B) +
-      I * matrix(phi_imag_hat_vec, nrow = N_eval_phi, ncol = B)
+    phi_hat <- phi_hat(X_train_phi, X_shifted_train_phi, X_eval_phi, mu, num_rounds_for_train, lgb_params)
     
     ### true CCF on evaluation for X
     cc_X <- matrix(
-      exp(I * rep(mu, each = N_eval_phi) * rep(X_shifted_eval_phi, times = B)),
-      nrow = N_eval_phi, ncol = B
-    )
+      exp(1i * rep(mu, each = N_eval_phi) * rep(X_shifted_eval_phi, times = B)),
+      nrow = N_eval_phi, ncol = B)
     
-    ### ψ training
-    # ψ training pairs: both X and Y in training
+    ### stuff for psi
     X_train_psi <- X[index_train]
     Y_train_psi <- Ymat[index_train, , drop = F] 
     
-    N_train_psi <- length(X_train_psi)
-    
-    # Expand ν into d columns with consistent names
-    nu_train_rep <- nu[rep(seq_len(B), each = N_train_psi), , drop = FALSE]
-    colnames(nu_train_rep) <- paste0("nu", seq_len(d))
-    
-    psi_features_train <- cbind(
-      x = rep(X_train_psi, times = B),
-      nu_train_rep
-    )
-    
-    nu_mult_Y_train <-Y_train_psi %*% t(nu)
-    
-    psi_real_response <- cos(as.vector(nu_mult_Y_train))
-    psi_imag_response <- sin(as.vector(nu_mult_Y_train))
-    
-    model_psi_real <- fit_lgb(psi_features_train, 
-                              psi_real_response, 
-                              num_round = num_rounds_for_train, 
-                              params = lgb_params)
-    model_psi_imag <- fit_lgb(psi_features_train, 
-                              psi_imag_response, 
-                              num_round = num_rounds_for_train, 
-                              params = lgb_params)
-    
-    ### ψ predictions
     index_eval_psi <- index_eval[1:(n - 1)]
-    shifted_index_eval_psi <- index_eval_psi + 1
     
     X_eval_psi <- X[index_eval_psi]
     Y_eval_psi <- Ymat[index_eval_psi, , drop = F] 
     
-    N_eval_psi <- length(index_eval_psi)
-    
-    # rep nu for evaluation
-    nu_eval_rep <- nu[rep(seq_len(B), each = N_eval_psi), , drop = FALSE]
-    colnames(nu_eval_rep) <- paste0("nu", seq_len(d))
-    
-    psi_features_eval <- cbind(
-      x = rep(X_eval_psi, times = B),
-      nu_eval_rep
-    )
-    
-    # perform predictions
-    psi_real_hat_vec <- predict(model_psi_real, as.matrix(psi_features_eval))
-    psi_imag_hat_vec <- predict(model_psi_imag, as.matrix(psi_features_eval))
-    
-    #combine into complex estimates
-    psi_hat <- matrix(psi_real_hat_vec, nrow = N_eval_psi, ncol = B) +
-      I * matrix(psi_imag_hat_vec, nrow = N_eval_psi, ncol = B)
+    psi_hat <- psi_hat(X_train_psi, Y_train_psi, X_eval_psi, nu, num_rounds_for_train, lgb_params)
     
     ### true CCF on evaluation for Y
-    cc_Y <- exp(I * (Y_eval_psi %*% t(nu)))
+    cc_Y <- exp(1i * (Y_eval_psi %*% t(nu)))
     
     ### calculate residual terms
     resX <- cc_X - phi_hat
@@ -201,21 +85,20 @@ estimate_stat <- function(data, n, L, B,
     }
     Covvar_Est[[l]] <- var_contrib
     
-    
     Gamma <- Gamma + colSums(resX * resY)
   }
   
   Covvar_Est <- Reduce("+", Covvar_Est) / ((n - 1) * (L - 1))
   
   Gamma_hat <- Gamma / ((n - 1) * (L - 1))
-  S_hat <- sqrt((n - 1) * (L - 1)) * max(abs(Re(Gamma_hat)), abs(Im(Gamma_hat)))
+  S_hat <- sqrt((n - 1)*(L - 1)) * max(abs(c(Re(Gamma_hat), Im(Gamma_hat))))
   
   return(list( S_hat = S_hat, Covvar_Est = Covvar_Est))
 }
 
 
 
-est_stat <- estimate_stat(data = sim, n = 10, L = 3, B = 5, lgb_params = list(learning_rate = 0.05,
+est_stat <- estimate_stat(data = sim, n = 100, L = 10, B = 5, lgb_params = list(learning_rate = 0.05,
                                                                   num_leaves = 31,
                                                                   verbose = -1))
 
@@ -240,7 +123,7 @@ sim <- simulate_AR_process(gamma = 0,
                            A = matrix(c(0.1, 0.7, -0.1, 0.3), nrow = 2))
 
 Tlen <- 500
-for(k in 1:100) {
+rej_values <- replicate(2, {
   data_sim <- simulate_AR_process(gamma = 0, 
                                   n = Tlen, 
                                   burnin = 0, 
@@ -253,12 +136,21 @@ for(k in 1:100) {
   crit_val <- sim_crit_value(covvar_est = Covvar_est_sim, alpha = 0.05)
   
   reject <- S_hat_sim > crit_val
-  if(k %% 10 == 0) print(k)
+
+  
+  list(reject = reject, S_hat = S_hat_sim)
+
+}, simplify = F)
 
 
+S_hat_vals <- c()
+for (i in 1:100) {
+  S_hat_vals[i] <- rej_values[[i]]$S_hat
 }
 
-reject
+ggplot() + 
+  geom_histogram(aes(x = S_hat_vals, y = after_stat(density)), color = "white")
+
 
 
 
