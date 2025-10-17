@@ -1,5 +1,10 @@
 library(tidyverse)
 library(lightgbm)
+rm(list = ls(
+))
+setwd("/Users/davidsenderovitz/Library/CloudStorage/OneDrive-Personligt/Dokumenter/Universitet/Speciale/Speciale_git/Speciale")
+
+source("simulate_AR_process.R")
 
 ### function to split timeseries into L blocks of size n
 make_blocks <- function(Tlen, n, L) {
@@ -242,7 +247,7 @@ sim <- simulate_AR_process(gamma = 0,
 
 
 Tlen <- 500
-n_sim <- 1e3
+n_sim <- 10
 S_hats <- numeric(n_sim)
 
 
