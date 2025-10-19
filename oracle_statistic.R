@@ -1,7 +1,6 @@
 ### oracle test statistics for 2D AR(1) process
 
 source("helper_functions.R")
-source("estimate_functions.R")
 source("Conditional_distributions.R")
 
 oracle_stat <- function(data, n, L, B, 
