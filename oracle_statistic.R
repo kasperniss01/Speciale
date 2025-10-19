@@ -3,7 +3,7 @@
 source("helper_functions.R")
 source("Conditional_distributions.R")
 
-estimate_stat <- function(data, n, L, B, 
+oracle_stat <- function(data, n, L, B, 
                           A_matrix, #matrix that generates the AR(1) process
                           # simulate mu and nu 
                           mu = matrix(rnorm(B), ncol = 1),
@@ -38,9 +38,9 @@ estimate_stat <- function(data, n, L, B,
     
     N_eval_phi <- length(X_eval_phi)
     
-    #remove excess parameter inputs when removed from cond_dist.R
     phi <- char_func_cond_X_next_given_X_previous_mat(a, X_eval_phi, mu)
     
+    # true CCF on evaluation for X
     cc_X <- exp(1i * outer(X_next_phi, mu))
     
     ### stuff for psi
@@ -51,10 +51,9 @@ estimate_stat <- function(data, n, L, B,
     
     N_eval_psi <- length(X_eval_psi)
     
-    #fix t-index in this
     psi <- char_func_cond_Y_given_X_mat(a, b, c, index_eval_psi, X_eval_psi, nu)
     
-    ### true CCF on evaluation for Y
+    # true CCF on evaluation for Y
     cc_Y <- exp(1i * (Y_eval_psi %*% t(matrix(nu, ncol = 1))))
     
     ### calculate residual terms
@@ -63,11 +62,13 @@ estimate_stat <- function(data, n, L, B,
     
     lambda <- resX * resY
     
+    #calculate gamma
     Gamma <- Gamma + colSums(lambda)
   }
   
-  Gamma <- Gamma / ((n - 1) * (L - 1))
-  S <- sqrt((n - 1)*(L - 1)) * max(abs(c(Re(Gamma), Im(Gamma))))
+  normalizer <- (n - 1) * (L - 1)
+  Gamma <- Gamma / normalizer
+  S <- sqrt(normalizer) * max(abs(c(Re(Gamma), Im(Gamma))))
   
   return(list(S = S))
 }
