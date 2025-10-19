@@ -3,12 +3,16 @@
 source("helper_functions.R")
 source("Conditional_distributions.R")
 
-oracle_stat <- function(data, n, L, B, 
+### function only works under the null, that is gamma coef = 0
+### corresponds to lower-triangular matrix
+oracle_stat_2D_AR1 <- function(data, n, L, B, 
                           A_matrix, #matrix that generates the AR(1) process
                           # simulate mu and nu 
                           mu = matrix(rnorm(B), ncol = 1),
                           nu = matrix(rnorm(B), ncol = 1)
                           ) {
+  #stops if not under the null
+  stopifnot(A_matrix[1, 1] == 0)
   
   X <- data$X
   Y <- data$Y #perhaps use the function that greps Y-matrix
@@ -18,7 +22,7 @@ oracle_stat <- function(data, n, L, B,
   
   Gamma <- complex(length.out = B)
   
-  # A = [[a, 0], [b, c]]
+  # A = [[a, 0], [b, c]] - corresponds to gamma = 0
   a <- A_matrix[1, 1]
   b <- A_matrix[2, 1]
   c <- A_matrix[2, 2]

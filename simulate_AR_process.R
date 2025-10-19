@@ -1,7 +1,7 @@
 library(tidyverse)
 library(lightgbm)
 
-simulate_AR_process <- function(n, 
+simulate_AR_process <- function(Tlen, 
                                 d = 1, #dimension of Y-process
                                 gamma = 0, #controls H_0 or H_A
                                 intercept = c(0, rep(0, d)),
@@ -21,7 +21,7 @@ simulate_AR_process <- function(n,
   ### make it possible for Y to be multidimensional
   ### perform input check on dimensions for A and Sigma
   
-  total_samples <- n + burnin
+  total_samples <- Tlen + burnin
   Z <- matrix(nrow = total_samples, ncol = 2) 
   Z[1, ] <- Z0
   
@@ -45,47 +45,40 @@ simulate_AR_process <- function(n,
   as.data.frame(Z)
 }
 
-sim <- simulate_AR_process(gamma = 0.5, 
-                           n = 1000, 
-                           burnin = 50, 
-                           A = matrix(c(0.1, 0.7, -0.1, 0.3), nrow = 2))
-
-### Quick check: partial correlation ρ(X_{t+1}, Y_t | X_t) ~ 0 
-rx <- lm(sim$X[2:nrow(sim)] ~ sim$X[1:(nrow(sim) - 1)])$residuals
-ry <- lm(sim$Y[1:(nrow(sim) - 1)] ~ sim$X[1:(nrow(sim) - 1)])$residuals
-cor(rx, ry) #near 0 under H_0?, otherwise not
-
-### n and L so that T = nL
-n <- 10
-L <- 100
-Tlen <- n + L
-
-### function to estimate gamma
-gamma_hat <- function(B, data, ...) {
-  munu <- matrix(rnorm(B * 2), ncol = 2)
-  mu <- munu[, 1]
-  nu <- munu[, 2]
+simulate_2D_AR1_process <- function(Tlen,
+                                    #defaults to null-hypothesis and random numbers
+                                    A_matrix = matrix(c(0.5, 0, 0.5, 0.5), nrow = 2, byrow = T),
+                                    intercept = c(0, 0),
+                                    Sigma = diag(2),
+                                    burnin = 0,
+                                    Z0 = c(0, 0),
+                                    verbose = TRUE
+                                    ) {
+  ### This functions generates samples from an AR(1) process Z = (X, Y) in R^2 where The innovations are as follows
+  ### Z_t = intercept + AZ_{t-1} + eps, where eps are iid noise. 
   
-  X <- data$X
-  Y <- data$Y
+  ### A_matrix controls the null, should be lower triangular under the null
+  if (verbose) print("Simulates under the hypothesis")
   
-  I <- complex(real = 0, imaginary = 1)
+  total_samples <- Tlen + burnin
+  Z <- matrix(nrow = total_samples, ncol = 2) 
+  Z[1, ] <- Z0
   
-  Gamma_hat <- list("list", B)
+  #create matrix used for iid noise
+  R <- t(chol(Sigma))
   
-  #loop over bs
-  for (b in 1:B) { 
-    cc_X <- exp(I * mu[b] * X)
-    cc_Y <- exp(I * nu[b] %*% Y) %>% drop()
+  #loop through time t
+  for (t in 2:total_samples) {
+    eps <- t(R) %*% rnorm(2)
+    Z[t, ] <- intercept + A_matrix %*% Z[t - 1, ] + eps
   }
   
-  Gamma_hat
+  #remove burnin Z's
+  Z <- Z[(burnin + 1): total_samples, ]
+  
+  #rename columns
+  colnames(Z) <- c("X", "Y")
+  as.data.frame(Z)
 }
-
-
-
-
-
-
 
 
