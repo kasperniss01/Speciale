@@ -7,12 +7,13 @@ source("estimate_functions.R")
 
 estimate_stat <- function(data, n, L, B, 
                           # simulate mu and nu 
-                          mu <- matrix(rnorm(B), ncol = 1),
-                          nu <- matrix(rnorm(B * d), ncol = d),
+                          mu = matrix(rnorm(B), ncol = 1), #probably just as input
+                          nu = matrix(rnorm(B * d), ncol = d), #prob just as input
                           num_rounds_for_train = 300,
                           p = 5,
                           lgb_params = list(),
                           objective = "regression") {
+  # browser()
   X <- data$X
   Y <- data$Y #perhaps use the function that greps Y-matrix
   Ymat <- if (is.matrix(Y)) Y else cbind(Y)

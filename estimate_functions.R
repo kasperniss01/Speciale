@@ -25,7 +25,7 @@ phi_hat <- function(training_X, training_X_shifted , evaluation_X, mu, num_round
   #objective defaults to L2 regression
   N_train <- length(training_X)
   N_eval <- length(evaluation_X)
-  B <- nrow(mu)
+  B <- if (is.matrix(mu)) nrow(mu) else length(mu)
   # browser()
   
   mu_train <- mu[rep(seq_len(B), each = N_train), , drop = FALSE]
@@ -72,7 +72,7 @@ psi_hat <- function(training_X, training_Y , evaluation_X, nu, num_rounds, lgb_p
   #objective defaults to L2 regression
   N_train <- length(training_X)
   N_eval <- length(evaluation_X)
-  B <- nrow(nu)
+  B <- if (is.matrix(nu)) nrow(nu) else length(nu)
   d <- ncol(training_Y)
   # browser()
   
