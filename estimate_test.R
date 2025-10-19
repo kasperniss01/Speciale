@@ -3,6 +3,7 @@ library(lightgbm)
 
 ### source helper functions
 source("helper_functions.R")
+source("estimate_functions.R")
 
 estimate_stat <- function(data, n, L, B, 
                           # simulate mu and nu 
@@ -10,7 +11,8 @@ estimate_stat <- function(data, n, L, B,
                           nu <- matrix(rnorm(B * d), ncol = d),
                           num_rounds_for_train = 300,
                           p = 5,
-                          lgb_params = list()) {
+                          lgb_params = list(),
+                          objective = "regression") {
   X <- data$X
   Y <- data$Y #perhaps use the function that greps Y-matrix
   Ymat <- if (is.matrix(Y)) Y else cbind(Y)
@@ -46,7 +48,13 @@ estimate_stat <- function(data, n, L, B,
     
     N_eval_phi <- length(X_eval_phi)
     
-    phi_hat <- phi_hat(X_train_phi, X_shifted_train_phi, X_eval_phi, mu, num_rounds_for_train, lgb_params)
+    phi_hat <- phi_hat(X_train_phi, 
+                       X_shifted_train_phi,
+                       X_eval_phi, 
+                       mu, 
+                       num_rounds_for_train,
+                       lgb_params,
+                       objective)
     
     ### true CCF on evaluation for X
     cc_X <- matrix(
@@ -62,7 +70,13 @@ estimate_stat <- function(data, n, L, B,
     X_eval_psi <- X[index_eval_psi]
     Y_eval_psi <- Ymat[index_eval_psi, , drop = F] 
     
-    psi_hat <- psi_hat(X_train_psi, Y_train_psi, X_eval_psi, nu, num_rounds_for_train, lgb_params)
+    psi_hat <- psi_hat(X_train_psi, 
+                       Y_train_psi, 
+                       X_eval_psi, 
+                       nu, 
+                       num_rounds_for_train, 
+                       lgb_params,
+                       objective)
     
     ### true CCF on evaluation for Y
     cc_Y <- exp(1i * (Y_eval_psi %*% t(nu)))
@@ -84,55 +98,17 @@ estimate_stat <- function(data, n, L, B,
     Gamma <- Gamma + colSums(resX * resY)
   }
   
-  Covvar_Est <- Reduce("+", Covvar_Est) / ((n - 1) * (L - 1))
+  normalizer <- (n - 1) * (L - 1)
   
-  Gamma_hat <- Gamma / ((n - 1) * (L - 1))
-  S_hat <- sqrt((n - 1)*(L - 1)) * max(abs(c(Re(Gamma_hat), Im(Gamma_hat))))
+  Covvar_Est <- Reduce("+", Covvar_Est) / normalizer
+  
+  Gamma_hat <- Gamma / normalizer
+  S_hat <- sqrt(normalizer) * max(abs(c(Re(Gamma_hat), Im(Gamma_hat))))
   
   return(list( S_hat = S_hat, Covvar_Est = Covvar_Est))
 }
 
 
-
-est_stat <- estimate_stat(data = sim, n = 100, L = 10, B = 5, lgb_params = list(learning_rate = 0.05,
-                                                                  num_leaves = 31,
-                                                                  verbose = -1))
-
-##remove all this at some point
-
-sim <- simulate_AR_process(gamma = 0, 
-                           n = 30, 
-                           burnin = 50, 
-                           A = matrix(c(0.1, 0.7, -0.1, 0.3), nrow = 2))
-
-Tlen <- 500
-rej_values <- replicate(2, {
-  data_sim <- simulate_AR_process(gamma = 0, 
-                                  n = Tlen, 
-                                  burnin = 0, 
-                                  A = matrix(c(0.1, 0.7, -0.1, 0.3), nrow = 2))
-  
-  est_stat_sim <- estimate_stat(data = data_sim, n = 100, L = 5, B = 10)
-  S_hat_sim <- est_stat_sim$S_hat
-  Covvar_est_sim <- est_stat_sim$Covvar_Est
-  
-  crit_val <- sim_crit_value(covvar_est = Covvar_est_sim, alpha = 0.05)
-  
-  reject <- S_hat_sim > crit_val
-
-  
-  list(reject = reject, S_hat = S_hat_sim)
-
-}, simplify = F)
-
-
-S_hat_vals <- c()
-for (i in 1:100) {
-  S_hat_vals[i] <- rej_values[[i]]$S_hat
-}
-
-ggplot() + 
-  geom_histogram(aes(x = S_hat_vals, y = after_stat(density)), color = "white")
 
 
 
