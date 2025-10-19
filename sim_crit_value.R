@@ -1,6 +1,6 @@
 ### R functionality to simulate critical value for S_hat
 
-source("estimate_stat.R")
+source("estimate_test.R")
 
 sim_crit_value <- function(n = 1e3, covvar_est, alpha = 0.05) {
   B <- nrow(covvar_est) / 2
