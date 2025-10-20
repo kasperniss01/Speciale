@@ -21,9 +21,12 @@ sim_rej_rate <- function(Tlen, n, L, B,
   
   S_hats <- numeric(repetitions)
   Ss <- numeric(repetitions)
+  covvar_list <- list()
+  data_list <- list()
   
   for (i in seq_len(repetitions)) {
     data <- simulate_2D_AR1_process(Tlen, A_matrix, verbose = FALSE)
+    data_list[[i]] <- data
     
     est <- estimate_stat(
       data = data, n = n, L = L, B = B,
@@ -35,6 +38,7 @@ sim_rej_rate <- function(Tlen, n, L, B,
     Ss[i] <- oracle_stat_2D_AR1(data, n, L, B, A_matrix, mu, nu)$S
     
     covvar_est <- est$Covvar_Est
+    covvar_list[[i]] <- covvar_est
     
     # browser()
     draws <- sim_crit_draws(covvar_est)
@@ -57,7 +61,10 @@ sim_rej_rate <- function(Tlen, n, L, B,
     estimates <- data.frame(S_hat = S_hats, S = Ss)
     
     #return both dataframes
-    return(list(rejection_rate_df = rejection_rate_df, estimates = estimates))
+    return(list(rejection_rate_df = rejection_rate_df, 
+                estimates = estimates, 
+                covvar = covvar_list,
+                data = data_list))
 }
 
 
@@ -70,20 +77,39 @@ B <- 10
 
 A <- matrix(c(-0.4, 0, -0.3, 0.8), nrow = 2, byrow = T)
 
-df <- sim_rej_rate(Tlen, n, L, B, A, seq(0.05, 1, 0.05))
+df <- sim_rej_rate(Tlen, n, L, B, A, seq(0.01, 1, 0.01))
 
-df_prec <- sim_rej_rate(Tlen, n, L, B, A, seq(0.05, 1, 0.05), repetitions = 10)
+df_prec <- sim_rej_rate(Tlen, n, L, B, A, seq(0.01, 1, 0.01))
 
 df_prec_CI <- df_prec %>% mutate(lower = rate - 1.96 * se,
                                  upper = rate + 1.96 * se)
 
 
 
-
-ggplot(df_prec_CI, aes(x = alpha, y = rate)) + 
+ggplot(df_prec$rejection_rate_df, aes(x = alpha, y = rate)) + 
   geom_line() + 
   geom_abline(color = "red") + 
-  geom_ribbon(aes(ymin = lower, ymax = upper), alpha = 0.2) + 
   theme_bw()
+
+ggplot(df_prec$estimates) + 
+  geom_point(aes(x = S_hat, y = S)) + 
+  geom_abline(color = "red") + 
+  theme_bw()
+
+ggplot(df_prec$estimates %>% pivot_longer(cols = c(S_hat, S))) + 
+  geom_histogram(aes(x = value), color = "white") + 
+  facet_wrap(~name) + 
+  theme_bw()
+
+
+ggplot(df_prec$estimates) + 
+  geom_qq(aes(sample = S_hat),
+          distribution = function(p) quantile(df_prec$estimates$S, p)) + 
+  geom_abline(color = "red") + 
+  theme_bw()
+
+
+saveRDS(df_prec, file = "rej_rate_T1000.rds")
+
 
 

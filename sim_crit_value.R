@@ -13,3 +13,19 @@ sim_crit_value <- function(n = 1e3, covvar_est, alpha = 0.05) {
   
   unname(quantile(dist, 1 - alpha/2))
 }
+
+sim_crit_draws <- function(covvar_est, nrep = 1e5) {
+  m <- nrow(covvar_est)
+  
+  R <- t(chol(covvar_est))                                
+  Z <- matrix(rnorm(m * nrep), m, nrep)
+  V <- R %*% Z
+  
+  col_max_abs <- function(M) apply(M, 2, function(v) max(abs(v)))
+  col_max_abs(V)
+}
+
+crit_from_draws <- function(draws, alpha) {
+  q <- 1 - alpha
+  unname(quantile(draws, q))
+}
