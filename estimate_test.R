@@ -10,7 +10,7 @@ estimate_stat <- function(data, n, L, B,
                           mu = matrix(rnorm(B), ncol = 1), #probably just as input
                           nu = matrix(rnorm(B * d), ncol = d), #prob just as input
                           num_rounds_for_train = 300,
-                          p = 5,
+                          p = log(n * L),
                           lgb_params = list(),
                           objective = "regression") {
   # browser()

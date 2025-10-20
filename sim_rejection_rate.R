@@ -19,6 +19,9 @@ sim_rej_rate <- function(Tlen, n, L, B,
   reject <- matrix(FALSE, nrow = K, ncol = repetitions,
                    dimnames = list(paste0("alpha=", alphas), NULL))
   
+  S_hats <- numeric(repetitions)
+  Ss <- numeric(repetitions)
+  
   for (i in seq_len(repetitions)) {
     data <- simulate_2D_AR1_process(Tlen, A_matrix, verbose = FALSE)
     
@@ -28,6 +31,9 @@ sim_rej_rate <- function(Tlen, n, L, B,
     )
     
     S_hat <- est$S_hat
+    S_hats[i] <- S_hat
+    Ss[i] <- oracle_stat_2D_AR1(data, n, L, B, A_matrix, mu, nu)$S
+    
     covvar_est <- est$Covvar_Est
     
     # browser()
@@ -45,31 +51,39 @@ sim_rej_rate <- function(Tlen, n, L, B,
     ses   <- sqrt(rates * (1 - rates) / repetitions)
     
     #store results in a dataframe with alpha, rejection rates and SEs
-    results <- data.frame(alpha = alphas, rate = as.numeric(rates), se = as.numeric(ses))
+    rejection_rate_df <- data.frame(alpha = alphas, rate = as.numeric(rates), se = as.numeric(ses))
     
-    return(results)
+    #store S_hat and S estimates
+    estimates <- data.frame(S_hat = S_hats, S = Ss)
+    
+    #return both dataframes
+    return(list(rejection_rate_df = rejection_rate_df, estimates = estimates))
 }
 
 
 
 
 Tlen <- 1000
-n <- 200
-L <- 5
+n <- 100
+L <- 10
 B <- 10
 
 A <- matrix(c(-0.4, 0, -0.3, 0.8), nrow = 2, byrow = T)
 
 df <- sim_rej_rate(Tlen, n, L, B, A, seq(0.05, 1, 0.05))
 
-df_prec <- sim_rej_rate(Tlen, n, L, B, A, seq(0.05, 1, 0.05))
+df_prec <- sim_rej_rate(Tlen, n, L, B, A, seq(0.05, 1, 0.05), repetitions = 10)
+
+df_prec_CI <- df_prec %>% mutate(lower = rate - 1.96 * se,
+                                 upper = rate + 1.96 * se)
 
 
 
 
-ggplot(df_prec) + 
-  geom_line(aes(x = alpha, y = rate)) + 
+ggplot(df_prec_CI, aes(x = alpha, y = rate)) + 
+  geom_line() + 
   geom_abline(color = "red") + 
+  geom_ribbon(aes(ymin = lower, ymax = upper), alpha = 0.2) + 
   theme_bw()
 
 
