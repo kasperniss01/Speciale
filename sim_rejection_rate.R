@@ -105,7 +105,7 @@ B <- 10
 
 A <- matrix(c(-0.4, 0, -0.3, 0.8), nrow = 2, byrow = T)
 
-df <- sim_rej_rate(Tlen, n, L, B, A, seq(0.01, 1, 0.01), repetitions = 10)
+df <- sim_rej_rate(Tlen, n, L, B, A, seq(0.01, 1, 0.01), repetitions = 200)
 
 # df_prec <- sim_rej_rate(Tlen, n, L, B, A, seq(0.01, 1, 0.01))
 # 
@@ -114,10 +114,10 @@ df <- sim_rej_rate(Tlen, n, L, B, A, seq(0.01, 1, 0.01), repetitions = 10)
 # 
 # 
 # 
-# ggplot(df_prec$rejection_rate_df, aes(x = alpha, y = rate)) + 
-#   geom_line() + 
-#   geom_abline(color = "red") + 
-#   theme_bw()
+ggplot(df$rejection_rate_df, aes(x = alpha, y = rate_true)) +
+  geom_line() +
+  geom_abline(color = "red") +
+  theme_bw()
 # 
 # ggplot(df_prec$estimates) + 
 #   geom_point(aes(x = S_hat, y = S)) + 
