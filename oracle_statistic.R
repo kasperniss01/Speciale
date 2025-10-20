@@ -12,7 +12,7 @@ oracle_stat_2D_AR1 <- function(data, n, L, B,
                           nu = matrix(rnorm(B), ncol = 1)
                           ) {
   #stops if not under the null
-  stopifnot(A_matrix[1, 1] == 0)
+  stopifnot(A_matrix[1, 2] == 0)
   
   X <- data$X
   Y <- data$Y #perhaps use the function that greps Y-matrix
