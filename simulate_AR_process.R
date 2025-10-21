@@ -22,7 +22,7 @@ simulate_AR_process <- function(Tlen,
   ### perform input check on dimensions for A and Sigma
   
   total_samples <- Tlen + burnin
-  Z <- matrix(nrow = total_samples, ncol = 2) 
+  Z <- matrix(nrow = total_samples, ncol = d + 1) 
   Z[1, ] <- Z0
   
   #create matrix used for iid noise
@@ -41,7 +41,9 @@ simulate_AR_process <- function(Tlen,
   Z <- Z[(burnin + 1): total_samples, ]
   
   #rename columns
-  colnames(Z) <- c("X", "Y")
+  Y_name <- c()
+  for(i in 1:d) Y_name[i] <- paste0("Y", i)
+  colnames(Z) <- c("X", Y_name)
   as.data.frame(Z)
 }
 

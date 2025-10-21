@@ -13,7 +13,7 @@ plot_rates <- function(df) {
     geom_abline(color = "red") +
     theme_bw()
   
-  (true_rate + est_rate) +
+  (est_rate + true_rate) +
     plot_annotation(
       title = "Estimated rejection rate",
       subtitle = "Left: based on oracle; right: based on estimated", 
@@ -64,6 +64,12 @@ plot_histograms <- function(df) {
       theme = theme(plot.title = element_text(hjust = 0.5),
                     plot.subtitle = element_text(hjust = 0.5))
     )
+}
+
+gather_plots <- function(df) {
+  plot_rates(df) / (plot_scatterplot(df) + plot_qq_plot(df)) / plot_histograms(df) + 
+    plot_annotation(title = "Plots for rejecetion rate",
+                    theme = theme(plot.title = element_text(hjust = 0.5)))
 }
 
 
