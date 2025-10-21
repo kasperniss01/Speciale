@@ -98,9 +98,9 @@ sim_rej_rate <- function(Tlen, n, L, B,
 
 
 
-Tlen <- 1000
-n <- 100
+Tlen <- 5e4
 L <- 10
+n <- Tlen / L
 B <- 10
 
 A <- matrix(c(-0.4, 0, -0.3, 0.8), nrow = 2, byrow = T)

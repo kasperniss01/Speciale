@@ -6,5 +6,3 @@ Consider a time series $(X_t, Y_t)$ where $X$ is one-dimensional and $Y$ is $d$-
 $$ H_0\ : \quad  X_{t+1} \perp Y_t \mid X_t $$
 
 under the assumption that $(X_t, Y_t)$ is jointly Markovian. 
-
-
