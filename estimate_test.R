@@ -5,7 +5,7 @@ library(lightgbm)
 source("helper_functions.R")
 source("estimate_functions.R")
 
-estimate_stat <- function(data, n, L, B, 
+estimate_stat <- function(data, L, B, 
                           # simulate mu and nu 
                           mu = matrix(rnorm(B), ncol = 1), #probably just as input
                           nu = matrix(rnorm(B * d), ncol = d), #prob just as input
@@ -23,6 +23,7 @@ estimate_stat <- function(data, n, L, B,
   Ymat <- if (is.matrix(Y)) Y else cbind(Y)
   
   Tlen <- nrow(data)
+  n <- Tlen / L
   d <- ncol(Ymat)
   
   Gamma_hat <- R1 <- R2 <- R3 <- true_Gamma <- complex(length.out = B)
@@ -32,8 +33,8 @@ estimate_stat <- function(data, n, L, B,
   
   for (l in 1:(L - 1)) {
     # indices for training and evaluation
-    index_train <- II_bar_l(Tlen, n, L, l, p)
-    index_eval <- II_l(Tlen, n, L, l)
+    index_train <- II_bar_l(Tlen, L, l, p)
+    index_eval <- II_l(Tlen, L, l)
     
     ### stuff for phi
     #masking indices
