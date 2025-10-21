@@ -10,7 +10,7 @@ estimate_stat <- function(data, L, B,
                           mu = matrix(rnorm(B), ncol = 1), #probably just as input
                           nu = matrix(rnorm(B * d), ncol = d), #prob just as input
                           num_rounds_for_train = 300,
-                          p = floor(log(n * L)),
+                          # p = floor(log(n * L)),
                           lgb_params = list(),
                           objective = "regression",
                           remainder_true_ccfs = list(true_phi = NULL, true_psi = NULL)
@@ -25,6 +25,8 @@ estimate_stat <- function(data, L, B,
   Tlen <- nrow(data)
   n <- Tlen / L
   d <- ncol(Ymat)
+  
+  p <- log(n * L)
   
   Gamma_hat <- R1 <- R2 <- R3 <- true_Gamma <- complex(length.out = B)
   
