@@ -5,7 +5,7 @@ source("Conditional_distributions.R")
 
 ### function only works under the null, that is gamma coef = 0
 ### corresponds to lower-triangular matrix
-oracle_stat_2D_AR1 <- function(data, n, L, B, 
+oracle_stat_2D_AR1 <- function(data, L, B, 
                           A_matrix, #matrix that generates the AR(1) process
                           # simulate mu and nu 
                           mu = matrix(rnorm(B), ncol = 1),
@@ -19,6 +19,7 @@ oracle_stat_2D_AR1 <- function(data, n, L, B,
   Ymat <- if (is.matrix(Y)) Y else cbind(Y) #should not be necessary
   
   Tlen <- nrow(data)
+  n <- Tlen / L
   
   Gamma <- complex(length.out = B)
   
@@ -31,7 +32,7 @@ oracle_stat_2D_AR1 <- function(data, n, L, B,
   nu <- as.numeric(nu)
   
   for (l in 1:(L - 1)) {
-    index_eval <- II_l(Tlen, n, L, l)
+    index_eval <- II_l(Tlen, L, l)
     
     ### stuff for phi
     index_eval_phi <- index_eval[1:(n - 1)]
