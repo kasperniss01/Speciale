@@ -171,6 +171,36 @@ char_func_cond_Y_given_X_mat <- function(a, b, c, t, x_t, u) {
 
 
 
+# d = 40
+# 
+# variance_Yt_closed_form(a = 0.5, b= rep(0.2, d), C = matrix(1:d^2, nrow = d, ncol = d), t = 10)
+
+
+mean_conditional_Y_given_X_highdim <- function(a, b, C, t, x_t, sigma_sq = 1) {
+  cov_Xt_Yt <- Covariance_Xt_Yt_highdim(a, b, C, t, sigma_sq)
+  var_Xt <- variance_Xt(a, t)
+  
+  cov_Xt_Yt / var_Xt * x_t
+}
+
+variance_conditional_Y_given_X_highdim <- function(a, b, C, t, sigma_sq = 1) {
+  var_Yt <- variance_Yt_highdim(a, b, C, t, sigma_sq)
+  cov_Xt_Yt <- Covariance_Xt_Yt_highdim(a, b, C, t, sigma_sq)
+  var_Xt <- variance_Xt(a, t)
+  
+  var_Yt - (cov_Xt_Yt %*% t(cov_Xt_Yt)) / var_Xt
+}
+char_func_conditional_Y_given_X_highdim <- function(a, b, C, t, x_t, u_vec, sigma_sq = 1) {
+  # u_vec is d-dimensional vector
+  
+  mean_cond <- mean_conditional_Y_given_X_highdim(a, b, C, t, x_t, sigma_sq)
+  var_cond <- variance_conditional_Y_given_X_highdim(a, b, C, t, sigma_sq)
+  
+  exponent <- 1i * sum(u_vec * mean_cond) - 0.5 * t(u_vec) %*% var_cond %*% u_vec
+  
+  exp(exponent)
+}
+
 
 
 
