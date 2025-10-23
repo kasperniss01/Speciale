@@ -14,12 +14,14 @@ estimate_stat <- function(data, L, B,
                           lgb_params = list(),
                           objective = "regression",
                           remainder_true_ccfs = list(true_phi = NULL, true_psi = NULL)
-                          # true ccf should take only two arguments: a vector x, and a vector u
+                          # for AR(1) processes: 
+                          # true ccf for phi should take only two arguments: a vector x, and a vector u
+                          # true ccf for psi should also take time input
                           # and return a length(x) times length(u) matrix
                           ) {
   # browser()
   X <- data$X
-  Y <- data$Y #perhaps use the function that greps Y-matrix
+  Y <- get_Y_mat(data)
   Ymat <- if (is.matrix(Y)) Y else cbind(Y)
   
   Tlen <- nrow(data)
@@ -169,6 +171,7 @@ estimate_stat <- function(data, L, B,
 
 
 small_data <- simulate_AR_process(10, d = 3, A = matrix(c(0.1, rep(0, 3), rep(0.1, 12)), nrow = 4, byrow = T))
+estimate_stat(small_data, 5, 2)
 
 
 
