@@ -12,7 +12,6 @@
 ### TODO: consider if we want to pass noise variance
 ### TODO: fix function names
 ### TODO: above includes highdim suffix
-### TODO: make A matrix as argument for all function instead of parts of A?
 
 
 ### --- WARNING: all these functions only work under the hypothesis --- ###
