@@ -32,7 +32,7 @@ df_T5K <- sim_rej_rate(T5K, n5K, L, B, A, seq(0.01, 1, 0.01))
 saveRDS(df_T5K, file = "T5K.rds")
 
 ### ------------------ ####
-#note: only ran with repetitions = 200 and not 500
+#note: only ran with repetitions = 200 and not 500g
 T10K <- 10000
 n10K <- T10K / L
 
