@@ -2,56 +2,44 @@
 ### (X_t+1 , Y_t+1) = A(X_t, Y_t) + epsilon_t
 ### where X_t is R-valued, Y_t is R^d-valued and epsilon is iid N(0, sigma^2I_d)
 
+### A is matrix decomposed as [[a, 0^T], [b, C]] wjere a is a scalar
+### 0 is the R^d 0-vector, b is a R^d vector and C is dxd matrix
+
 ## linearity yields that the conditional distributions are Gaussian 
 ## with mean E(Y_t | X_t) and variance V(Y_t | X_t)
 
+
+### TODO: consider if we want to pass noise variance
+### TODO: fix function names
+### TODO: above includes highdim suffix
+
+install.packages("expm") #for matrix exponentiation
 library(expm)
 
-## the formula for the variance of X_t is the same for every choice of Y_t
+### ------------ Variance for X process --------------- ###
+
+# the formula for the variance of X_t is the same for every dimension of Y_t
 variance_Xt <- function(a, t, sigma1_sq = 1) {
   #a is a scalar
+  #t is a vector of time-inputs
+  
+  #returns a vector of length(t)
+  
   sigma1_sq * (1 - a^(2 * t)) / (1 - a^2) 
 }
 
-### For Y one-dimensional
-variance_Y_t <- function(a, b, c, t) {
-  b^2 / (a - c)^2 * (
-    (a^2 - a^(2 * t)) / (1 - a^2) +
-    (c^2 - c^(2 * t)) / (1 - c^2) -
-    2 * (a * c - (a * c)^t) / (1 - a * c)
-  ) + (1 - c^(2 * t)) / (1 - c^2)
-}
 
+### ---------- Covariance between X_t and Y_t ----------- ###
 
-Covariance_Xt_Yt <- function(a, b, c, t) {
-  a * b / (1 - a^2) * ((1 - (a * c)^t) / (1 - a * c) - (a^t) / (a) * (a^t - c^t) / (a - c))
-}
-
-mean_conditional_Y_given_X <- function(a, b, c, t, x_t) {
-  cov_Xt_Yt <- Covariance_Xt_Yt(a, b, c, t)
-  var_Xt <- variance_Xt(a, t)
-  
-  cov_Xt_Yt / var_Xt * x_t
-}
-
-variance_conditional_Y_given_X <- function(a, b, c, t) {
-  var_Yt <- variance_Y_t(a, b, c, t)
-  cov_Xt_Yt <- Covariance_Xt_Yt(a, b, c, t)
-  var_Xt <- variance_Xt(a, t)
-  
-  var_Yt - cov_Xt_Yt^2 / var_Xt
-}
-
-
-## for d-dimensional Y
 Covariance_Xt_Yt_highdim <- function(a, b, C, t, sigma1_sq = 1) {
   # a scalar
   #b d-dimensional vector
   #C dxd matrix
   #t is vector of time-inputs
+  
   #returns a d x length(t) matrix
   
-  #fix sigma1_sq later...
+  #TODO: fix sigma_1_sq
   
   d <- nrow(C) 
   I_d <- diag(d)
@@ -68,6 +56,7 @@ Covariance_Xt_Yt_highdim <- function(a, b, C, t, sigma1_sq = 1) {
   return(out)
 }
 
+### ------------------ Variance for Y process -------------- ###
 variance_Yt_highdim <- function(a, b, C, t, sigma_sq = 1) {
   # a scalar
   # b dx1 vector
@@ -75,6 +64,8 @@ variance_Yt_highdim <- function(a, b, C, t, sigma_sq = 1) {
   # t vector of time-imputs
   
   # returns d x d x length(t) array
+  
+  #TODO: fix sigma_sq
   
   d <- nrow(C)
   I_d <- diag(d)
@@ -98,11 +89,11 @@ variance_Yt_highdim <- function(a, b, C, t, sigma_sq = 1) {
     out[, , i] <- mat
   }
   
-  if(length(t) == 1) out <- out[, , 1, drop = FALSE] #don't know if we need this?
+  if(length(t) == 1) out <- out[, , 1, drop = FALSE] #don't know if we need this? 
   return(out)
 }
 
-# Fast - chat solution
+# Fast - chat - solution
 variance_Yt_closed_form <- function(a, b, C, t,
                                     sigma1_sq = 1,           # Var(eps1)
                                     Sigma2 = NULL,           # Var(eps2), default I_d
@@ -151,51 +142,7 @@ variance_Yt_closed_form <- function(a, b, C, t,
 
 
 
-### Char. func.
-
-## when Y is one-dimensional
-char_func_conditional_X_next_given_X_previous <- function(a, x_prev, u) {
-  mean_X_next_given_X_prev <- a * x_prev
-  
-  exp(1i * u * mean_X_next_given_X_prev - 0.5 * u^2)
-}
-
-#the above function but returns a matrix
-char_func_cond_X_next_given_X_previous_mat <- function(a, x_prev, u) {
-  #returns a matrix
-  N <- length(x_prev)
-  B <- length(u)
-  
-  if(is.matrix(u)) u <- drop(u)
-  
-  exp(1i * outer(a * x_prev, u) - 0.5 * matrix(rep(u^2, each = N), N, B))
-}
-
-char_func_conditional_Y_given_X <- function(a, b, c, t, x_t, u) {
-  mean_cond <- mean_conditional_Y_given_X(a, b, c, t, x_t)
-  var_cond <- variance_conditional_Y_given_X(a, b, c, t)
-  
-  exp(1i * u * mean_cond - 0.5 * u^2 * var_cond)
-}
-
-#the above function but returns a matrix
-char_func_cond_Y_given_X_mat <- function(a, b, c, t, x_t, u) {
-  #produces matrix
-  
-  mean_cond <- mean_conditional_Y_given_X(a, b, c, t, x_t)
-  var_cond <- variance_conditional_Y_given_X(a, b, c, t)
-  
-  if(is.matrix(u)) u <- drop(u)
-  
-  exp(1i * outer(mean_cond,  u) - 0.5 * outer(var_cond, u^2))
-}
-
-
-
-# d = 40
-# 
-# variance_Yt_closed_form(a = 0.5, b= rep(0.2, d), C = matrix(1:d^2, nrow = d, ncol = d), t = 10)
-
+### ---------- Implementation of conditional mean function --------- ###
 
 mean_conditional_Y_given_X_highdim <- function(a, b, C, t, x_t, sigma_sq = 1) {
   #a is scalar
@@ -205,7 +152,6 @@ mean_conditional_Y_given_X_highdim <- function(a, b, C, t, x_t, sigma_sq = 1) {
   #x_t is vector of x to condition on same length as t
   
   # output matrix of size d x length(t)
-  # browser()
   
   cov_Xt_Yt <- Covariance_Xt_Yt_highdim(a, b, C, t, sigma_sq) # d x length(t)
   var_Xt <- variance_Xt(a, t) # t x 1
@@ -213,16 +159,19 @@ mean_conditional_Y_given_X_highdim <- function(a, b, C, t, x_t, sigma_sq = 1) {
   scale <- x_t / var_Xt
   
   out <- t( t(cov_Xt_Yt) * scale) 
-  #why transpose this many times? to make sure that scale multiplies correctly?
   
   return(out)
 }
 
+### --------- Implementation of conditional variance function ------ ####
+
+#maybe deprecated?
 variance_conditional_Y_given_X_highdim <- function(a, b, C, t, sigma_sq = 1) {
   #a is a scalar
   # b is dx1 vector
   # C is dxd matrix
   # t is vector of time inputs
+  
   #outputs 3D array of dimension d x d x length(t)
   
   d <- nrow(C)
@@ -246,6 +195,41 @@ variance_conditional_Y_given_X_highdim <- function(a, b, C, t, sigma_sq = 1) {
   return(out)
 }
 
+
+### ------ Implementation of CCFs --------- ###
+
+### ---------- CCF of X_{t+1} | X_t ---------- ###
+# deprecated?
+char_func_conditional_X_next_given_X_previous <- function(a, x_prev, u) {
+  #a scalar
+  #x_prev is a vector of xs used to condition on
+  #u is a vector of evaluation points the same length as x_prev
+  
+  #returns length(u) vector
+  
+  mean_X_next_given_X_prev <- a * x_prev
+  
+  exp(1i * u * mean_X_next_given_X_prev - 0.5 * u^2)
+}
+
+
+char_func_cond_X_next_given_X_previous_mat <- function(a, x_prev, u) {
+  #a scalar
+  #x_prev a vector
+  #u a vector
+  
+  #returns a matrix of dimension length(x_prev) x length(u)
+  
+  N <- length(x_prev)
+  B <- length(u)
+  
+  if(is.matrix(u)) u <- drop(u)
+  
+  exp(1i * outer(a * x_prev, u) - 0.5 * matrix(rep(u^2, each = N), N, B))
+}
+
+### ----------- CCF of Y_t | X_t ----------- ####
+
 char_func_cond_Y_given_X_highdim_mat <- function(a, b, C, t, x_t, u, sigma_sq = 1) {
   # a is a scalar
   # b is a dx1 vector
@@ -253,6 +237,8 @@ char_func_cond_Y_given_X_highdim_mat <- function(a, b, C, t, x_t, u, sigma_sq = 
   #t is a vector of time input
   #x_t is a sequence of x to condition on same length as t
   # u is either a matrix of size either dx1 or B x d if mu or nu is input
+  
+  # returns matrix of size length(t) x length(u)
   
   B <- nrow(u)
   d <- length(b)
@@ -265,7 +251,6 @@ char_func_cond_Y_given_X_highdim_mat <- function(a, b, C, t, x_t, u, sigma_sq = 
   
   out <- matrix(0, nrow = length(t), ncol = B)
   for (i in seq_along(t)) {
-    # browser()
     mean_i <- mean[, i, drop = F] # dx1
     variance_i <- variance[, , i] #dxd
     linear_term <- as.vector(u %*% mean_i) #Bx1
@@ -273,7 +258,7 @@ char_func_cond_Y_given_X_highdim_mat <- function(a, b, C, t, x_t, u, sigma_sq = 
     out[i, ] <- exp(1i * linear_term - 0.5 * quad_term) #char. function
   }
   
-  if (length(t) == 1) out <- out[1, , drop = FALSE] #dont know if needed
+  if (length(t) == 1) out <- out[1, , drop = FALSE] #don't know if needed
   
   return(out)
 }
@@ -287,3 +272,63 @@ char_func_cond_Y_given_X_highdim_mat <- function(a, b, C, t, x_t, u, sigma_sq = 
 
 
 
+### ----------- deprecated 1D functions --------- ###
+
+### For Y one-dimensional ###
+
+# variance_Y_t <- function(a, b, c, t) {
+#   b^2 / (a - c)^2 * (
+#     (a^2 - a^(2 * t)) / (1 - a^2) +
+#       (c^2 - c^(2 * t)) / (1 - c^2) -
+#       2 * (a * c - (a * c)^t) / (1 - a * c)
+#   ) + (1 - c^(2 * t)) / (1 - c^2)
+# }
+# 
+# 
+# Covariance_Xt_Yt <- function(a, b, c, t) {
+#   a * b / (1 - a^2) * ((1 - (a * c)^t) / (1 - a * c) - (a^t) / (a) * (a^t - c^t) / (a - c))
+# }
+# 
+# mean_conditional_Y_given_X <- function(a, b, c, t, x_t) {
+#   cov_Xt_Yt <- Covariance_Xt_Yt(a, b, c, t)
+#   var_Xt <- variance_Xt(a, t)
+#   
+#   cov_Xt_Yt / var_Xt * x_t
+# }
+# 
+# variance_conditional_Y_given_X <- function(a, b, c, t) {
+#   var_Yt <- variance_Y_t(a, b, c, t)
+#   cov_Xt_Yt <- Covariance_Xt_Yt(a, b, c, t)
+#   var_Xt <- variance_Xt(a, t)
+#   
+#   var_Yt - cov_Xt_Yt^2 / var_Xt
+# }
+
+
+## when Y is one-dimensional
+
+ 
+# char_func_conditional_Y_given_X <- function(a, b, c, t, x_t, u) {
+#   mean_cond <- mean_conditional_Y_given_X(a, b, c, t, x_t)
+#   var_cond <- variance_conditional_Y_given_X(a, b, c, t)
+#   
+#   exp(1i * u * mean_cond - 0.5 * u^2 * var_cond)
+# }
+# 
+# #the above function but returns a matrix
+# char_func_cond_Y_given_X_mat <- function(a, b, c, t, x_t, u) {
+#   #produces matrix
+#   
+#   mean_cond <- mean_conditional_Y_given_X(a, b, c, t, x_t)
+#   var_cond <- variance_conditional_Y_given_X(a, b, c, t)
+#   
+#   if(is.matrix(u)) u <- drop(u)
+#   
+#   exp(1i * outer(mean_cond,  u) - 0.5 * outer(var_cond, u^2))
+# }
+
+
+
+# d = 40
+# 
+# variance_Yt_closed_form(a = 0.5, b= rep(0.2, d), C = matrix(1:d^2, nrow = d, ncol = d), t = 10)
