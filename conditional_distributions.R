@@ -32,7 +32,7 @@ variance_Xt <- function(A, t, sigma1_sq = 1) {
   a <- A[1, 1] #a scalar 
   
   sigma1_sq * (1 - a^(2 * t)) / (1 - a^2) 
-}
+} #might be a bit silly to give full A as argument here?
 
 
 ### ---------- Covariance between X_t and Y_t ----------- ###
