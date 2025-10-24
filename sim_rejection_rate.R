@@ -5,7 +5,7 @@ source("simulate_AR_process.R")
 source("estimate_test.R")
 source("sim_crit_value.R")
 source("oracle_statistic.R")
-source("Conditional_distributions.R")
+source("conditional_distributions.R")
 
 #only for AR1 process, consider changing data-generating process to be input so it works in general
 sim_rej_rate <- function(Tlen, L, B,
