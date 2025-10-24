@@ -1,11 +1,14 @@
 ### document for simulating rejection rate 
 ### right now only works for 2D-AR(1) processes!!!
 
-source("simulate_AR_process.R")
-source("estimate_test.R")
-source("sim_crit_value.R")
-source("oracle_statistic.R")
-source("conditional_distributions.R")
+source("simulate_AR_process.R") #don't think this is needed
+source("estimate_test.R") #this is needed
+source("sim_crit_value.R") #this is needed
+source("oracle_statistic.R") #don't think this is needed
+source("conditional_distributions.R") #this is needed
+
+#todo: clean up, new name
+# generalize DGP
 
 #only for AR1 process, consider changing data-generating process to be argument so it works in general
 sim_rej_rate <- function(Tlen, L, B,
@@ -122,7 +125,7 @@ sim_rej_rate <- function(Tlen, L, B,
     return(output)
 }
 
-
+### ------- testing stuff ----- ###
 
 Tlen <- 10
 L <- 2
@@ -132,7 +135,7 @@ B <- 2
 # data_test <- simulate_AR_process(Tlen, A)
 # estimate_stat(data_test, L, B)
 
-test_df_highdim <- sim_rej_rate(Tlen, L, B, A, c(0.1, 0.2), repetitions = 10,
+test_df_highdim <- sim_rej_rate(Tlen, L, B, A, c(0.1, 0.2), repetitions = 12,
                         remainder_true_ccfs = list(
                                           true_phi = function(x, u) char_func_cond_X_next_given_X_previous_mat(A[1,1], x, u),
                                           true_psi = function(x, u, t) {

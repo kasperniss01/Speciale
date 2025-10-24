@@ -2,6 +2,8 @@
 
 source("sim_rejection_rate.R")
 
+#deprecated now?
+
 #setup
 A <- matrix(c(-0.4, 0, -0.3, 0.8), nrow = 2, byrow = T)
 B <- 10
