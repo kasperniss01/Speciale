@@ -12,6 +12,7 @@
 ### TODO: consider if we want to pass noise variance
 ### TODO: fix function names
 ### TODO: above includes highdim suffix
+### TODO: make A matrix as argument for all function instead of parts of A?
 
 install.packages("expm") #for matrix exponentiation
 library(expm)
