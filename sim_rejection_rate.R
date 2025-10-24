@@ -7,7 +7,7 @@ source("sim_crit_value.R")
 source("oracle_statistic.R")
 source("conditional_distributions.R")
 
-#only for AR1 process, consider changing data-generating process to be input so it works in general
+#only for AR1 process, consider changing data-generating process to be argument so it works in general
 sim_rej_rate <- function(Tlen, L, B,
                          A_matrix, 
                          alphas,
@@ -155,7 +155,18 @@ test_df_1D <- sim_rej_rate(Tlen, L, B, A_small, c(0.1, 0.2), repetitions = 10,
 # 
 # char_func_conditional_Y_given_X_highdim(A[1,1], A[-1,1], A[-1,-1], 10, 1, c(0.5, 0.4)) %>% drop
 
+A_power <- matrix(c(-0.2, 0.6, 0.2, -0.7), byrow = T, nrow = 2) #under alternative
+Tlen <- 100
+L <- 5
+B <- 5
+
+test_df_power <- sim_rej_rate(Tlen, L, B,
+                              A_power, seq(0.1, 1, 0.1),
+                              repetitions = 100)
 
 
+fit <- vars::VAR(test_df_power$data[[1]], p = 1, type = "const")
+vars::causality(fit, cause = "Y")$Granger
 
+(summary(fit$varresult$X)$coefficients)[2, ]
 
