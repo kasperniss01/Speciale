@@ -1,5 +1,7 @@
 ### ------ functions for estimation of phi and psi -----
 
+### todo: add docstrings 
+
 ### fitting a lightgbm regression model that defaults to squared-error-loss  
 fit_lgb <- function(X, y, num_round = 300, params = list(),
                     objective = "regression") {
@@ -26,7 +28,6 @@ phi_hat <- function(training_X, training_X_shifted , evaluation_X, mu, num_round
   N_train <- length(training_X)
   N_eval <- length(evaluation_X)
   B <- if (is.matrix(mu)) nrow(mu) else length(mu)
-  # browser()
   
   mu_train <- mu[rep(seq_len(B), each = N_train), , drop = FALSE]
   colnames(mu_train) <- paste0("mu", seq_len(1))
@@ -74,7 +75,6 @@ psi_hat <- function(training_X, training_Y , evaluation_X, nu, num_rounds, lgb_p
   N_eval <- length(evaluation_X)
   B <- if (is.matrix(nu)) nrow(nu) else length(nu)
   d <- ncol(training_Y)
-  # browser()
   
   nu_train <- nu[rep(seq_len(B), each = N_train), , drop = FALSE]
   colnames(nu_train) <- paste0("nu", seq_len(d))

@@ -1,5 +1,8 @@
 library(patchwork)
 
+#todo: install packages
+#todo: is this needed?
+
 plot_rates <- function(df) {
   true_rate <- ggplot(df$rejection_rate_df, aes(x = alpha, y = rate_true)) +
     labs(x = "alpha", y = "Estimated (true) rejection rate") + 

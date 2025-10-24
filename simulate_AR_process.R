@@ -1,6 +1,9 @@
 library(tidyverse)
 library(lightgbm)
 
+#todo: make sure packages are installed
+#todo: make doclines and clean up comments
+
 simulate_AR_process <- function(Tlen, 
                                 A, #multiplied onto Z_{t-1}
                                 d = ncol(A) - 1, #dimension of Y-process
@@ -43,6 +46,8 @@ simulate_AR_process <- function(Tlen,
   as.data.frame(Z)
 }
 
+
+#deprecated??
 simulate_2D_AR1_process <- function(Tlen,
                                     #defaults to null-hypothesis and random numbers
                                     A_matrix = matrix(c(0.5, 0, 0.5, 0.5), nrow = 2, byrow = T),

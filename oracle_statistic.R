@@ -1,5 +1,7 @@
 ### oracle test statistics for 2D AR(1) process
 
+## totally deprecated?? ##
+
 source("helper_functions.R")
 source("Conditional_distributions.R")
 

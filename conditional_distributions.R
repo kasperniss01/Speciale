@@ -14,6 +14,9 @@
 ### TODO: above includes highdim suffix
 ### TODO: make A matrix as argument for all function instead of parts of A?
 
+
+### --- WARNING: all these functions only work under the hypothesis --- ###
+
 install.packages("expm") #for matrix exponentiation
 library(expm)
 

@@ -5,6 +5,9 @@ library(lightgbm)
 source("helper_functions.R")
 source("estimate_functions.R")
 
+#todo: make sure packages are installed
+# add docstrings and explanations
+
 estimate_stat <- function(data, L, B, 
                           # simulate mu and nu 
                           mu = matrix(rnorm(B), ncol = 1), #probably just as input

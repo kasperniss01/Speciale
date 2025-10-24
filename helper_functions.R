@@ -5,7 +5,7 @@
 
 ## ----- functions to apply to time series data ------ 
 
-### function to split a time series into L blocks of size n
+### function to split a time series into L blocks of size n = T/L
 make_blocks <- function(Tlen, L) {
   stopifnot(Tlen %% L == 0)
   n <- Tlen / L
@@ -35,12 +35,6 @@ pairs_from_mask <- function(in_mask) {
 }
 
 #### Gets Y as a matrix
-# get_Y_mat <- function(data) {
-#   ycols <- grep("^Y[0-9]*$", names(data))
-#   if (length(ycols) == 0 && "Y" %in% names(data)) ycols <- which(names(data) == "Y")
-#   if (length(ycols) == 0) stop("No Y columns found (need 'Y' or 'Y1..Yd').")
-#   as.matrix(data[, ycols, drop = FALSE])
-# }
 get_Y_mat <- function(data) {
   nm <- names(data)
   ycols <- grep("^Y(\\d+)?$", nm)
