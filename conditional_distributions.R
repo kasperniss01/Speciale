@@ -2,7 +2,7 @@
 ### (X_t+1 , Y_t+1) = A(X_t, Y_t) + epsilon_t
 ### where X_t is R-valued, Y_t is R^d-valued and epsilon is iid N(0, sigma^2I_d)
 
-### A is matrix decomposed as [[a, 0^T], [b, C]] wjere a is a scalar
+### A is matrix decomposed as [[a, 0^T], [b, C]] where a is a scalar
 ### 0 is the R^d 0-vector, b is a R^d vector and C is dxd matrix
 
 ## linearity yields that the conditional distributions are Gaussian 
@@ -17,17 +17,19 @@
 
 ### --- WARNING: all these functions only work under the hypothesis --- ###
 
-install.packages("expm") #for matrix exponentiation
+#install.packages("expm") #for matrix exponentiation should this be installed or?
 library(expm)
 
 ### ------------ Variance for X process --------------- ###
 
 # the formula for the variance of X_t is the same for every dimension of Y_t
-variance_Xt <- function(a, t, sigma1_sq = 1) {
-  #a is a scalar
+variance_Xt <- function(A, t, sigma1_sq = 1) {
+  #A a (d+1) x (d+1) autoregressive matrix
   #t is a vector of time-inputs
   
   #returns a vector of length(t)
+  
+  a <- A[1, 1] #a scalar 
   
   sigma1_sq * (1 - a^(2 * t)) / (1 - a^2) 
 }
@@ -35,18 +37,21 @@ variance_Xt <- function(a, t, sigma1_sq = 1) {
 
 ### ---------- Covariance between X_t and Y_t ----------- ###
 
-Covariance_Xt_Yt_highdim <- function(a, b, C, t, sigma1_sq = 1) {
-  # a scalar
-  #b d-dimensional vector
-  #C dxd matrix
+Covariance_Xt_Yt_highdim <- function(A, t, sigma1_sq = 1) {
+  #A a (d+1) x (d+1) autoregressive matrix
   #t is vector of time-inputs
   
   #returns a d x length(t) matrix
   
   #TODO: fix sigma_1_sq
   
+  a <- A[1, 1] #a scalar
+  b <- A[-1, 1] #dx1 vector
+  C <- A[-1, -1] #dxd matrix
+  
   d <- nrow(C) 
   I_d <- diag(d)
+  # browser()
   out <- matrix(0, nrow = d, ncol = length(t))
   b <- matrix(b, ncol = 1)
   
@@ -61,15 +66,17 @@ Covariance_Xt_Yt_highdim <- function(a, b, C, t, sigma1_sq = 1) {
 }
 
 ### ------------------ Variance for Y process -------------- ###
-variance_Yt_highdim <- function(a, b, C, t, sigma_sq = 1) {
-  # a scalar
-  # b dx1 vector
-  # C dxd matrix
+variance_Yt_highdim <- function(A, t, sigma_sq = 1) {
+  #A a (d+1) x (d+1) autoregressive matrix
   # t vector of time-imputs
   
   # returns d x d x length(t) array
   
   #TODO: fix sigma_sq
+  
+  a <- A[1, 1] #a scalar
+  b <- A[-1, 1] #dx1 vector
+  C <- A[- 1, -1] #dxd matrix
   
   d <- nrow(C)
   I_d <- diag(d)
@@ -83,9 +90,9 @@ variance_Yt_highdim <- function(a, b, C, t, sigma_sq = 1) {
     
     for(j in 1:ti) {
       mat <- mat + (C %^% (j - 1)) %*% (
-        bbt * variance_Xt(a, ti - j) + 
-          b %*% t(Covariance_Xt_Yt_highdim(a, b, C, ti - j)) %*% t(C) + 
-          C %*% Covariance_Xt_Yt_highdim(a, b, C, ti - j) %*% t(b) +
+        bbt * variance_Xt(A, ti - j) + 
+          b %*% t(Covariance_Xt_Yt_highdim(A, ti - j)) %*% t(C) + 
+          C %*% Covariance_Xt_Yt_highdim(A, ti - j) %*% t(b) +
           sigma_sq * I_d
           ) %*% (t(C) %^% (j - 1))
     }
@@ -148,17 +155,19 @@ variance_Yt_closed_form <- function(a, b, C, t,
 
 ### ---------- Implementation of conditional mean function --------- ###
 
-mean_conditional_Y_given_X_highdim <- function(a, b, C, t, x_t, sigma_sq = 1) {
-  #a is scalar
-  # b is d x 1 vector
-  # C is dxd matrix
+mean_conditional_Y_given_X_highdim <- function(A, t, x_t, sigma_sq = 1) {
+  #A a (d+1) x (d+1) autoregressive matrix
   # t is vector of time inputs
   #x_t is vector of x to condition on same length as t
   
   # output matrix of size d x length(t)
   
-  cov_Xt_Yt <- Covariance_Xt_Yt_highdim(a, b, C, t, sigma_sq) # d x length(t)
-  var_Xt <- variance_Xt(a, t) # t x 1
+  a <- A[1, 1] #scalar
+  b <- A[-1, 1] #dx1 vector
+  C <- A[-1, -1] #dxd matrix
+  
+  cov_Xt_Yt <- Covariance_Xt_Yt_highdim(A, t, sigma_sq) # d x length(t)
+  var_Xt <- variance_Xt(A, t) # t x 1
   
   scale <- x_t / var_Xt
   
@@ -170,23 +179,24 @@ mean_conditional_Y_given_X_highdim <- function(a, b, C, t, x_t, sigma_sq = 1) {
 ### --------- Implementation of conditional variance function ------ ####
 
 #maybe deprecated?
-variance_conditional_Y_given_X_highdim <- function(a, b, C, t, sigma_sq = 1) {
-  #a is a scalar
-  # b is dx1 vector
-  # C is dxd matrix
+variance_conditional_Y_given_X_highdim <- function(A, t, sigma_sq = 1) {
+  #A a (d+1) x (d+1) autoregressive matrix
   # t is vector of time inputs
   
   #outputs 3D array of dimension d x d x length(t)
   
+  a <- A[1, 1] #scalar
+  b <- A[-1, 1] #dx1 vector
+  C <- A[-1, -1] #dxd matrix
+  
   d <- nrow(C)
   
-  var_Yt <- variance_Yt_highdim(a, b, C, t) #dxdx length(t)
-  var_Xt <- variance_Xt(a, t) # length(t) x 1
-  cov_Xt_Yt <- Covariance_Xt_Yt_highdim(a, b, C, t) # d x length(t)
+  var_Yt <- variance_Yt_highdim(A, t) #dxdx length(t)
+  var_Xt <- variance_Xt(A, t) # length(t) x 1
+  cov_Xt_Yt <- Covariance_Xt_Yt_highdim(A, t) # d x length(t)
   
   out <- array(0, dim = c(d, d, length(t)))
   
-  # browser()
   for (i in seq_along(t)) {
     r <- matrix(cov_Xt_Yt[, i], ncol = 1) #d x 1
     vx <- var_Xt[i] # scalar
@@ -204,12 +214,14 @@ variance_conditional_Y_given_X_highdim <- function(a, b, C, t, sigma_sq = 1) {
 
 ### ---------- CCF of X_{t+1} | X_t ---------- ###
 # deprecated?
-char_func_conditional_X_next_given_X_previous <- function(a, x_prev, u) {
-  #a scalar
+char_func_conditional_X_next_given_X_previous <- function(A, x_prev, u) {
+  #A a (d+1) x (d+1) autoregressive matrix
   #x_prev is a vector of xs used to condition on
   #u is a vector of evaluation points the same length as x_prev
   
   #returns length(u) vector
+  
+  a <- A[1, 1] #scalar
   
   mean_X_next_given_X_prev <- a * x_prev
   
@@ -217,12 +229,14 @@ char_func_conditional_X_next_given_X_previous <- function(a, x_prev, u) {
 }
 
 
-char_func_cond_X_next_given_X_previous_mat <- function(a, x_prev, u) {
-  #a scalar
+char_func_cond_X_next_given_X_previous_mat <- function(A, x_prev, u) {
+  #A a (d+1) x (d+1) autoregressive matrix
   #x_prev a vector
   #u a vector
   
   #returns a matrix of dimension length(x_prev) x length(u)
+  
+  a <- A[1, 1]
   
   N <- length(x_prev)
   B <- length(u)
@@ -234,23 +248,25 @@ char_func_cond_X_next_given_X_previous_mat <- function(a, x_prev, u) {
 
 ### ----------- CCF of Y_t | X_t ----------- ####
 
-char_func_cond_Y_given_X_highdim_mat <- function(a, b, C, t, x_t, u, sigma_sq = 1) {
-  # a is a scalar
-  # b is a dx1 vector
-  # C is a dxd matrix
+char_func_cond_Y_given_X_highdim_mat <- function(A, t, x_t, u, sigma_sq = 1) {
+  #A a (d+1) x (d+1) autoregressive matrix
   #t is a vector of time input
   #x_t is a sequence of x to condition on same length as t
   # u is either a matrix of size either dx1 or B x d if mu or nu is input
   
   # returns matrix of size length(t) x length(u)
   
+  a <- A[1, 1] #scalar
+  b <- A[-1, 1] #dx1 vector
+  C <- A[-1, -1] #dxd matrix
+  
   B <- nrow(u)
   d <- length(b)
   
   if(nrow(u) == d) u <- t(u) #transpose if u is a dx1 matrix - why I don't know
   
-  mean <- mean_conditional_Y_given_X_highdim(a, b, C, t, x_t, sigma_sq) # d x length(t)
-  variance <- variance_conditional_Y_given_X_highdim(a, b, C, t, sigma_sq) #d x d x length(t)
+  mean <- mean_conditional_Y_given_X_highdim(A, t, x_t, sigma_sq) # d x length(t)
+  variance <- variance_conditional_Y_given_X_highdim(A, t, sigma_sq) #d x d x length(t)
   #variance could also just be a matrix I think if t has length 1?
   
   out <- matrix(0, nrow = length(t), ncol = B)

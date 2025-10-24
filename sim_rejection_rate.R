@@ -137,9 +137,9 @@ B <- 2
 
 test_df_highdim <- sim_rej_rate(Tlen, L, B, A, c(0.1, 0.2), repetitions = 12,
                         remainder_true_ccfs = list(
-                                          true_phi = function(x, u) char_func_cond_X_next_given_X_previous_mat(A[1,1], x, u),
+                                          true_phi = function(x, u) char_func_cond_X_next_given_X_previous_mat(A, x, u),
                                           true_psi = function(x, u, t) {
-                                            char_func_cond_Y_given_X_highdim_mat(A[1, 1], A[-1, 1], A[-1, -1], t, x, u)
+                                            char_func_cond_Y_given_X_highdim_mat(A, t, x, u)
                                           }
                                         ))
 
