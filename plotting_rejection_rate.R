@@ -1,8 +1,12 @@
 library(patchwork)
 
 #todo: install packages
-#todo: is this needed?
+#todo: is this needed in general?
+#todo: add function descriptions to know why they do
+#todo: change function name to things that makes more sense
 
+
+### ------ Functions to make plots for calibration and power ------ ###
 plot_rates <- function(df) {
   true_rate <- ggplot(df$rejection_rate_df, aes(x = alpha, y = rate_true)) +
     labs(x = "alpha", y = "Estimated (true) rejection rate") + 
@@ -74,5 +78,57 @@ gather_plots <- function(df) {
     plot_annotation(title = "Plots for rejecetion rate",
                     theme = theme(plot.title = element_text(hjust = 0.5)))
 }
+
+
+### ------ functions to make plots to assess remainder terms ------ ###
+
+plot_remainder_histograms <- function(df) {
+  histograms <- ggplot(df$remainders %>% pivot_longer(cols = c(R1, R2, R3))) + 
+    geom_histogram(aes(x = value, y = after_stat(density)), color = "white") + 
+    facet_wrap(~name, labeller = as_labeller(
+      c(R1 = "R1", R2 = "R2", R3 = "R3"))) + 
+    theme_bw()
+  
+  histograms + 
+    plot_annotation(
+      title = "Distribution of remainders",
+      subtitle = paste0("Length of chain: ", df$Tlen),
+      theme = theme(plot.title = element_text(hjust = 0.5),
+                    plot.subtitle = element_text(hjust = 0.5))
+    )
+}
+
+#not sure this works as intended... difficult to analyze with small sample size
+plot_remainder_decays <- function(...) {
+  arguments <- list(...)
+  number_dfs <- length(arguments)
+  
+  dfs <- vector("list", length = number_dfs)
+
+  for( i in 1:number_dfs) {
+    arg_i <- arguments[[i]]
+    dfs[[i]] <- arg_i$remainder %>% mutate(Tlen = arg_i$Tlen)
+  }
+  
+  combined_data_frame <- bind_rows(dfs)
+  browser()
+  
+  summarized_df <- combined_data_frame %>%
+    group_by(Tlen) %>%
+    mutate(
+      R1_rate = R1 * log(Tlen),
+      R2_rate = R2 * log(Tlen),
+      R3_rate = R3 * log(Tlen)
+    ) %>%
+    summarise(
+      mean_R1_rate = mean(R1_rate, na.rm = TRUE),
+      mean_R2_rate = mean(R2_rate, na.rm = TRUE),
+      mean_R3_rate = mean(R3_rate, na.rm = TRUE)
+    ) %>%
+    ungroup()
+  
+  summarized_df
+}
+
 
 

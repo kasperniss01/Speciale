@@ -7,6 +7,7 @@ source("estimate_functions.R")
 
 #todo: make sure packages are installed
 # add docstrings and explanations
+# consider whether or not remainders and such things should only be called if CCFs are true
 
 estimate_stat <- function(data, L, B, 
                           # simulate mu and nu 
@@ -157,8 +158,13 @@ estimate_stat <- function(data, L, B,
     
     S_true <- sqrt(normalizer) * max(abs(c(Re(true_Gamma), Im(true_Gamma))))
     
+    #normalize remainders similar to S
+    R1 <- sqrt(normalizer) * max(abs(c(Re(R1), Im(R1))))
+    R2 <- sqrt(normalizer) * max(abs(c(Re(R2), Im(R2))))
+    R3 <- sqrt(normalizer) * max(abs(c(Re(R3), Im(R3))))
+    
     output <- append(output,
-                     list(Remainders = list(R1 = R1, R2 = R2, R3 = R3),
+                     list(Remainders = data.frame(R1 = R1, R2 = R2, R3 = R3), #used to be list
                           Covvar_Est_true = Covvar_Est_true,
                           true_Gamma = true_Gamma,
                           S_true = S_true))
