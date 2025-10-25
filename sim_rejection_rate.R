@@ -34,7 +34,7 @@ sim_rej_rate <- function(Tlen, L, B,
     reject_true <- matrix(FALSE, nrow = K, ncol = repetitions,
                           dimnames = list(paste0("alpha=", alphas), NULL))
     
-    remainders <- list()
+    remainders <- data.frame()
     S_trues <- numeric(repetitions)
     
     covvar_true_list <- list()
@@ -66,7 +66,7 @@ sim_rej_rate <- function(Tlen, L, B,
     
     ## if calculate true stuff
     if (!is.null(true_phi) && !is.null(true_psi)) {
-      remainders[[i]] <- est$Remainders
+      remainders <- bind_rows(remainders, est$Remainders)
       
       S_true <- est$S_true
       S_trues[i] <- S_true
@@ -116,7 +116,8 @@ sim_rej_rate <- function(Tlen, L, B,
     output <- list(rejection_rate_df = rejection_rate_df,
                    estimates = estimates,
                    covvar = covvars,
-                   data = data_list)
+                   data = data_list,
+                   Tlen = Tlen)
     
     if (!is.null(true_phi) && !is.null(true_psi)) {
       output <- append(output, list(remainders = remainders))
@@ -127,7 +128,7 @@ sim_rej_rate <- function(Tlen, L, B,
 
 ### ------- testing stuff ----- ###
 
-Tlen <- 10
+T10 <- 10
 L <- 2
 A <- matrix(c(0.3, 0, 0, 0.2, 0.7, -0.4, -0.6, 0.9, 0.3), byrow = T, nrow = 3)
 B <- 2
@@ -135,13 +136,30 @@ B <- 2
 # data_test <- simulate_AR_process(Tlen, A)
 # estimate_stat(data_test, L, B)
 
-test_df_highdim <- sim_rej_rate(Tlen, L, B, A, c(0.1, 0.2), repetitions = 12,
+test_df_highdim_T10 <- sim_rej_rate(T10, L, B, A, c(0.1, 0.2), repetitions = 12,
                         remainder_true_ccfs = list(
                                           true_phi = function(x, u) char_func_cond_X_next_given_X_previous_mat(A, x, u),
                                           true_psi = function(x, u, t) {
                                             char_func_cond_Y_given_X_highdim_mat(A, t, x, u)
                                           }
                                         ))
+T20 <- 20
+test_df_highdim_T20 <- sim_rej_rate(T20, L, B, A, c(0.1, 0.2), repetitions = 12,
+                                    remainder_true_ccfs = list(
+                                      true_phi = function(x, u) char_func_cond_X_next_given_X_previous_mat(A, x, u),
+                                      true_psi = function(x, u, t) {
+                                        char_func_cond_Y_given_X_highdim_mat(A, t, x, u)
+                                      }
+                                    ))
+
+T100 <- 100
+test_df_highdim_T100 <- sim_rej_rate(T100, L, B, A, c(0.1, 0.2), repetitions = 12,
+                                    remainder_true_ccfs = list(
+                                      true_phi = function(x, u) char_func_cond_X_next_given_X_previous_mat(A, x, u),
+                                      true_psi = function(x, u, t) {
+                                        char_func_cond_Y_given_X_highdim_mat(A, t, x, u)
+                                      }
+                                    ))
 
 A_small <- matrix(c(0.3, 0, -0.2, 0.7), byrow = T, nrow = 2)
 test_df_1D <- sim_rej_rate(Tlen, L, B, A_small, c(0.1, 0.2), repetitions = 10,
@@ -164,12 +182,13 @@ L <- 5
 B <- 5
 
 test_df_power <- sim_rej_rate(Tlen, L, B,
-                              A_power, seq(0.1, 1, 0.1),
-                              repetitions = 100)
+                              A_small, seq(0.1, 1, 0.1),
+                              repetitions = 1)
 
 
 fit <- vars::VAR(test_df_power$data[[1]], p = 1, type = "const")
-vars::causality(fit, cause = "Y")$Granger
+vars::causality(fit, cause = "Y1")$Granger
 
-(summary(fit$varresult$X)$coefficients)[2, ]
+summary(fit$varresult$X)$coefficients
+summary(fit$varresult$Y)$coefficients
 
