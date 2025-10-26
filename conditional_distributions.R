@@ -28,7 +28,7 @@ variance_Xt <- function(A, t, sigma1_sq = 1) {
   
   #returns a vector of length(t)
   
-  a <- A[1, 1] #a scalar 
+  a <- as.numeric(A[1, 1]) #a scalar 
   
   sigma1_sq * (1 - a^(2 * t)) / (1 - a^2) 
 } #might be a bit silly to give full A as argument here?
@@ -45,8 +45,8 @@ Covariance_Xt_Yt_highdim <- function(A, t, sigma1_sq = 1) {
   #TODO: fix sigma_1_sq
   
   a <- A[1, 1] #a scalar
-  b <- A[-1, 1] #dx1 vector
-  C <- A[-1, -1] #dxd matrix
+  b <- as.vector(A[-1, 1]) #dx1 vector
+  C <- as.matrix(A[-1, -1]) #dxd matrix
   
   d <- nrow(C) 
   I_d <- diag(d)
@@ -73,9 +73,9 @@ variance_Yt_highdim <- function(A, t, sigma_sq = 1) {
   
   #TODO: fix sigma_sq
   
-  a <- A[1, 1] #a scalar
-  b <- A[-1, 1] #dx1 vector
-  C <- A[- 1, -1] #dxd matrix
+  a <- as.numeric(A[1, 1]) #a scalar
+  b <- as.vector(A[-1, 1]) #dx1 vector
+  C <- as.matrix(A[- 1, -1]) #dxd matrix
   
   d <- nrow(C)
   I_d <- diag(d)
@@ -161,9 +161,9 @@ mean_conditional_Y_given_X_highdim <- function(A, t, x_t, sigma_sq = 1) {
   
   # output matrix of size d x length(t)
   
-  a <- A[1, 1] #scalar
-  b <- A[-1, 1] #dx1 vector
-  C <- A[-1, -1] #dxd matrix
+  a <- as.numeric(A[1, 1]) #scalar
+  b <- as.vector(A[-1, 1]) #dx1 vector
+  C <- as.matrix(A[-1, -1]) #dxd matrix
   
   cov_Xt_Yt <- Covariance_Xt_Yt_highdim(A, t, sigma_sq) # d x length(t)
   var_Xt <- variance_Xt(A, t) # t x 1
@@ -184,13 +184,15 @@ variance_conditional_Y_given_X_highdim <- function(A, t, sigma_sq = 1) {
   
   #outputs 3D array of dimension d x d x length(t)
   
-  a <- A[1, 1] #scalar
-  b <- A[-1, 1] #dx1 vector
-  C <- A[-1, -1] #dxd matrix
+  # browser()
+  
+  a <- as.numeric(A[1, 1]) #scalar
+  b <- as.vector(A[-1, 1]) #dx1 vector
+  C <- as.matrix(A[-1, -1]) #dxd matrix
   
   d <- nrow(C)
   
-  var_Yt <- variance_Yt_highdim(A, t) #dxdx length(t)
+  var_Yt <- variance_Yt_highdim(A, t) #d x d x length(t)
   var_Xt <- variance_Xt(A, t) # length(t) x 1
   cov_Xt_Yt <- Covariance_Xt_Yt_highdim(A, t) # d x length(t)
   
@@ -220,7 +222,7 @@ char_func_conditional_X_next_given_X_previous <- function(A, x_prev, u) {
   
   #returns length(u) vector
   
-  a <- A[1, 1] #scalar
+  a <- as.numeric(A[1, 1]) #scalar
   
   mean_X_next_given_X_prev <- a * x_prev
   
@@ -235,7 +237,9 @@ char_func_cond_X_next_given_X_previous_mat <- function(A, x_prev, u) {
   
   #returns a matrix of dimension length(x_prev) x length(u)
   
-  a <- A[1, 1]
+  # browser()
+  
+  a <- as.numeric(A[1, 1])
   
   N <- length(x_prev)
   B <- length(u)
@@ -255,9 +259,9 @@ char_func_cond_Y_given_X_highdim_mat <- function(A, t, x_t, u, sigma_sq = 1) {
   
   # returns matrix of size length(t) x length(u)
   
-  a <- A[1, 1] #scalar
-  b <- A[-1, 1] #dx1 vector
-  C <- A[-1, -1] #dxd matrix
+  a <- as.numeric(A[1, 1]) #scalar
+  b <- as.vector(A[-1, 1]) #dx1 vector
+  C <- as.matrix(A[-1, -1]) #dxd matrix
   
   B <- nrow(u)
   d <- length(b)

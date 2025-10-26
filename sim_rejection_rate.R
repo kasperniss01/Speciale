@@ -7,7 +7,10 @@ source("sim_crit_value.R") #this is needed
 source("oracle_statistic.R") #don't think this is needed
 source("conditional_distributions.R") #this is needed
 
+library(vars)
+
 #todo: clean up, new name
+# make sure vars package is installed
 # generalize DGP
 
 #only for AR1 process, consider changing data-generating process to be argument so it works in general
@@ -16,8 +19,10 @@ sim_rej_rate <- function(Tlen, L, B,
                          alphas,
                          repetitions = 500,
                          remainder_true_ccfs = list(true_phi = NULL, true_psi = NULL), 
+                         parametric = FALSE, 
                          verbose = TRUE) {
   
+  # browser()
   true_phi <- remainder_true_ccfs$true_phi
   true_psi <- remainder_true_ccfs$true_psi
   
@@ -29,6 +34,11 @@ sim_rej_rate <- function(Tlen, L, B,
   
   reject <- matrix(FALSE, nrow = K, ncol = repetitions,
                    dimnames = list(paste0("alpha=", alphas), NULL))
+  
+  if (d == 1) {
+    parametric_reject <- matrix(FALSE, nrow = K, ncol = repetitions,
+                                dimnames = list(paste0("alpha=", alphas), NULL))
+  }
   
   if (!is.null(true_phi) && !is.null(true_psi)) {
     reject_true <- matrix(FALSE, nrow = K, ncol = repetitions,
@@ -64,6 +74,15 @@ sim_rej_rate <- function(Tlen, L, B,
     crits <- crit_from_draws(draws, alphas)
     reject[, i] <- (S_hat > crits)
     
+    ## if parametric is TRUE
+    if (d == 1) {
+      fit <- vars::VAR(data, p = 1)
+      p_val <- coefficients(fit)$X["Y1.l1", ] %>% tail(1) #only works in Y 1D case right now
+      parametric_reject[, i] <- (p_val > alphas)
+      
+      ## make sub-category so that if parametric and phi and psi use estimated A matrix in phi and psi
+    }
+    
     ## if calculate true stuff
     if (!is.null(true_phi) && !is.null(true_psi)) {
       remainders <- bind_rows(remainders, est$Remainders)
@@ -96,6 +115,15 @@ sim_rej_rate <- function(Tlen, L, B,
     estimates <- data.frame(S_hat = S_hats)
     covvars <- list(est = covvar_list)
     
+    if (d == 1) {
+      rates_parametric <- rowMeans(parametric_reject)
+      ses_parametric <- sqrt(rates_parametric * (1 - rates_parametric) / repetitions)
+      
+      rejection_rate_df <- rejection_rate_df %>% mutate(
+        rates_parametric = as.numeric(rates_parametric),
+        se_parametric = as.numeric(ses_parametric)
+      )
+    }
     
     if (!is.null(true_phi) && !is.null(true_psi)) {
       
@@ -128,67 +156,67 @@ sim_rej_rate <- function(Tlen, L, B,
 
 ### ------- testing stuff ----- ###
 
-T10 <- 10
-L <- 2
-A <- matrix(c(0.3, 0, 0, 0.2, 0.7, -0.4, -0.6, 0.9, 0.3), byrow = T, nrow = 3)
-B <- 2
-
-# data_test <- simulate_AR_process(Tlen, A)
-# estimate_stat(data_test, L, B)
-
-test_df_highdim_T10 <- sim_rej_rate(T10, L, B, A, c(0.1, 0.2), repetitions = 12,
-                        remainder_true_ccfs = list(
-                                          true_phi = function(x, u) char_func_cond_X_next_given_X_previous_mat(A, x, u),
-                                          true_psi = function(x, u, t) {
-                                            char_func_cond_Y_given_X_highdim_mat(A, t, x, u)
-                                          }
-                                        ))
-T20 <- 20
-test_df_highdim_T20 <- sim_rej_rate(T20, L, B, A, c(0.1, 0.2), repetitions = 12,
-                                    remainder_true_ccfs = list(
-                                      true_phi = function(x, u) char_func_cond_X_next_given_X_previous_mat(A, x, u),
-                                      true_psi = function(x, u, t) {
-                                        char_func_cond_Y_given_X_highdim_mat(A, t, x, u)
-                                      }
-                                    ))
-
-T100 <- 100
-test_df_highdim_T100 <- sim_rej_rate(T100, L, B, A, c(0.1, 0.2), repetitions = 12,
-                                    remainder_true_ccfs = list(
-                                      true_phi = function(x, u) char_func_cond_X_next_given_X_previous_mat(A, x, u),
-                                      true_psi = function(x, u, t) {
-                                        char_func_cond_Y_given_X_highdim_mat(A, t, x, u)
-                                      }
-                                    ))
-
+# T10 <- 10
+# L <- 2
+# A <- matrix(c(0.3, 0, 0, 0.2, 0.7, -0.4, -0.6, 0.9, 0.3), byrow = T, nrow = 3)
+# B <- 2
+# 
+# # data_test <- simulate_AR_process(Tlen, A)
+# # estimate_stat(data_test, L, B)
+# 
+# test_df_highdim_T10 <- sim_rej_rate(T10, L, B, A, c(0.1, 0.2), repetitions = 12,
+#                         remainder_true_ccfs = list(
+#                                           true_phi = function(x, u) char_func_cond_X_next_given_X_previous_mat(A, x, u),
+#                                           true_psi = function(x, u, t) {
+#                                             char_func_cond_Y_given_X_highdim_mat(A, t, x, u)
+#                                           }
+#                                         ))
+# T20 <- 20
+# test_df_highdim_T20 <- sim_rej_rate(T20, L, B, A, c(0.1, 0.2), repetitions = 12,
+#                                     remainder_true_ccfs = list(
+#                                       true_phi = function(x, u) char_func_cond_X_next_given_X_previous_mat(A, x, u),
+#                                       true_psi = function(x, u, t) {
+#                                         char_func_cond_Y_given_X_highdim_mat(A, t, x, u)
+#                                       }
+#                                     ))
+# 
+# T100 <- 100
+# test_df_highdim_T100 <- sim_rej_rate(T100, L, B, A, c(0.1, 0.2), repetitions = 12,
+#                                     remainder_true_ccfs = list(
+#                                       true_phi = function(x, u) char_func_cond_X_next_given_X_previous_mat(A, x, u),
+#                                       true_psi = function(x, u, t) {
+#                                         char_func_cond_Y_given_X_highdim_mat(A, t, x, u)
+#                                       }
+#                                     ))
+# 
 A_small <- matrix(c(0.3, 0, -0.2, 0.7), byrow = T, nrow = 2)
-test_df_1D <- sim_rej_rate(Tlen, L, B, A_small, c(0.1, 0.2), repetitions = 10,
+test_df_1D <- sim_rej_rate(Tlen, L, B, A_matrix = A_small, c(0.1, 0.2), repetitions = 10,
                            remainder_true_ccfs = list(
-                             true_phi = function(x, u) char_func_cond_X_next_given_X_previous_mat(A[1,1], x, u),
+                             true_phi = function(x, u) char_func_cond_X_next_given_X_previous_mat(A_small, x, u),
                              true_psi = function(x, u, t) {
-                               char_func_cond_Y_given_X_highdim_mat(A[1, 1], A[-1, 1], A[-1, -1], t, x, u)
+                               char_func_cond_Y_given_X_highdim_mat(A_small, t, x, u)
                              }
                            ))
-
-
-
-# true_psi(10, c(1,1), 1) %>% drop()
 # 
-# char_func_conditional_Y_given_X_highdim(A[1,1], A[-1,1], A[-1,-1], 10, 1, c(0.5, 0.4)) %>% drop
-
-A_power <- matrix(c(-0.2, 0.6, 0.2, -0.7), byrow = T, nrow = 2) #under alternative
-Tlen <- 100
-L <- 5
-B <- 5
-
-test_df_power <- sim_rej_rate(Tlen, L, B,
-                              A_small, seq(0.1, 1, 0.1),
-                              repetitions = 1)
-
-
-fit <- vars::VAR(test_df_power$data[[1]], p = 1, type = "const")
-vars::causality(fit, cause = "Y1")$Granger
-
-summary(fit$varresult$X)$coefficients
-summary(fit$varresult$Y)$coefficients
-
+# 
+# 
+# # true_psi(10, c(1,1), 1) %>% drop()
+# # 
+# # char_func_conditional_Y_given_X_highdim(A[1,1], A[-1,1], A[-1,-1], 10, 1, c(0.5, 0.4)) %>% drop
+# 
+# A_power <- matrix(c(-0.2, 0.6, 0.2, -0.7), byrow = T, nrow = 2) #under alternative
+# Tlen <- 100
+# L <- 5
+# B <- 5
+# 
+# test_df_power <- sim_rej_rate(Tlen, L, B,
+#                               A_small, seq(0.1, 1, 0.1),
+#                               repetitions = 1)
+# 
+# 
+# fit <- vars::VAR(test_df_power$data[[1]], p = 1, type = "const")
+# vars::causality(fit, cause = "Y1")$Granger
+# 
+# summary(fit$varresult$X)$coefficients
+# summary(fit$varresult$Y)$coefficients
+# 
