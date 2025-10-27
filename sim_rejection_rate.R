@@ -1,7 +1,7 @@
 ### document for simulating rejection rate 
 ### right now only works for 2D-AR(1) processes!!!
 
-source("simulate_AR_process.R") #don't think this is needed
+source("simulate_AR_process.R") #this is needed
 source("estimate_test.R") #this is needed
 source("sim_crit_value.R") #this is needed
 source("oracle_statistic.R") #don't think this is needed
@@ -78,7 +78,7 @@ sim_rej_rate <- function(Tlen, L, B,
     if (d == 1) {
       fit <- vars::VAR(data, p = 1)
       p_val <- coefficients(fit)$X["Y1.l1", ] %>% tail(1) #only works in Y 1D case right now
-      parametric_reject[, i] <- (p_val > alphas)
+      parametric_reject[, i] <- (p_val < alphas)
       
       ## make sub-category so that if parametric and phi and psi use estimated A matrix in phi and psi
     }
@@ -156,10 +156,10 @@ sim_rej_rate <- function(Tlen, L, B,
 
 ### ------- testing stuff ----- ###
 
-# T10 <- 10
-# L <- 2
-# A <- matrix(c(0.3, 0, 0, 0.2, 0.7, -0.4, -0.6, 0.9, 0.3), byrow = T, nrow = 3)
-# B <- 2
+T10 <- 10
+L <- 2
+A <- matrix(c(0.3, 0, 0, 0.2, 0.7, -0.4, -0.6, 0.9, 0.3), byrow = T, nrow = 3)
+B <- 2
 # 
 # # data_test <- simulate_AR_process(Tlen, A)
 # # estimate_stat(data_test, L, B)
@@ -190,13 +190,15 @@ sim_rej_rate <- function(Tlen, L, B,
 #                                     ))
 # 
 A_small <- matrix(c(0.3, 0, -0.2, 0.7), byrow = T, nrow = 2)
-test_df_1D <- sim_rej_rate(Tlen, L, B, A_matrix = A_small, c(0.1, 0.2), repetitions = 10,
-                           remainder_true_ccfs = list(
-                             true_phi = function(x, u) char_func_cond_X_next_given_X_previous_mat(A_small, x, u),
-                             true_psi = function(x, u, t) {
-                               char_func_cond_Y_given_X_highdim_mat(A_small, t, x, u)
-                             }
-                           ))
+test_data <- simulate_AR_process(Tlen = 500, A = A_small)
+# test_df_1D <- sim_rej_rate(T10, L, B, A_matrix = A_small, c(0.1, 0.2), repetitions = 10,
+#                            parametric = T,
+#                            remainder_true_ccfs = list(
+#                              true_phi = function(x, u) char_func_cond_X_next_given_X_previous_mat(A_small, x, u),
+#                              true_psi = function(x, u, t) {
+#                                char_func_cond_Y_given_X_highdim_mat(A_small, t, x, u)
+#                              }
+#                            ))
 # 
 # 
 # 
