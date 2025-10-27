@@ -1,9 +1,12 @@
 library(tidyverse)
 library(lightgbm)
+library(vars) # technically unnessecary to impoort, but must be installed.
 
 ### source helper functions
 source("helper_functions.R")
 source("estimate_functions.R")
+
+
 
 #todo: make sure packages are installed
 # add docstrings and explanations
