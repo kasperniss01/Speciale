@@ -87,12 +87,24 @@ sim_rej_rate <- function(Tlen, L, B,
     reject[, i] <- (S_hat > crits)
     
     ## if parametric is TRUE
-    if (d == 1 && parametric) {
+    if (parametric) {
       fit <- vars::VAR(data, p = 1)
-      p_val <- coefficients(fit)$X["Y1.l1", ] %>% tail(1) #only works in Y 1D case right now
-      parametric_reject[, i] <- (p_val < alphas)
       
-      ## make sub-category so that if parametric and phi and psi use estimated A matrix in phi and psi
+      # Extract p-values from the coefficient matrix
+      p_vals <- coefficients(fit)$X %>%
+        t() %>%
+        as_tibble() %>%
+        dplyr::select(starts_with("Y")) %>%
+        slice(4) %>%
+        as_vector() %>%
+        unname()
+      
+      # Vectorized Bonferroni thresholds
+      bonferroni_alphas <- alphas / d
+      
+      # Vectorized rejection test
+      parametric_reject[, i] <- colSums(outer(p_vals, bonferroni_alphas, "<")) > 0
+      
       
       #browser()
       
@@ -110,7 +122,7 @@ sim_rej_rate <- function(Tlen, L, B,
     }
     
     ## if calculate true stuff
-    if (!is.null(true_phi) && !is.null(true_psi)) {
+    if (!is.null(remainder_true_ccfs$true_phi) && !is.null(remainder_true_ccfs$true_psi)) {
       remainders <- bind_rows(remainders, est$Remainders)
       
       S_true <- est$S_true
@@ -141,7 +153,9 @@ sim_rej_rate <- function(Tlen, L, B,
     estimates <- data.frame(S_hat = S_hats)
     covvars <- list(est = covvar_list)
     
-    if (d == 1 && parametric) {
+    if (parametric) {
+     # browser()
+      
       rates_parametric <- rowMeans(parametric_reject)
       ses_parametric <- sqrt(rates_parametric * (1 - rates_parametric) / repetitions)
       
@@ -194,19 +208,20 @@ sim_rej_rate <- function(Tlen, L, B,
 
 #T10 <- 10
 #L <- 2
-#A <- matrix(c(0.3, 0, 0, 0.2, 0.7, -0.4, -0.6, 0.9, 0.3), byrow = T, nrow = 3)
+A <- matrix(c(0.3, 0, 0, 0.2, 0.7, -0.4, -0.6, 0.9, 0.3), byrow = T, nrow = 3)
 #B <- 2
 # 
 # # data_test <- simulate_AR_process(Tlen, A)
 # # estimate_stat(data_test, L, B)
 # 
-# test_df_highdim_T10 <- sim_rej_rate(T10, L, B, A, c(0.1, 0.2), repetitions = 12,
-#                         remainder_true_ccfs = list(
-#                                           true_phi = function(x, u) char_func_cond_X_next_given_X_previous_mat(A, x, u),
-#                                           true_psi = function(x, u, t) {
-#                                             char_func_cond_Y_given_X_highdim_mat(A, t, x, u)
-#                                           }
-#                                         ))
+test_df_highdim_T10 <- sim_rej_rate(100, L = 2, B = 2, A = A, alphas = seq(0.1,1, 0.05), repetitions = 100,
+                        remainder_true_ccfs = list(
+                                          true_phi = function(x, u, A) char_func_cond_X_next_given_X_previous_mat(A, x, u),
+                                          true_psi = function(x, u, A, t) {
+                                            char_func_cond_Y_given_X_highdim_mat(A, t, x, u)
+                                          }
+                                        ),
+                        parametric = TRUE)
 # T20 <- 20
 # test_df_highdim_T20 <- sim_rej_rate(T20, L, B, A, c(0.1, 0.2), repetitions = 12,
 #                                     remainder_true_ccfs = list(
@@ -227,7 +242,7 @@ sim_rej_rate <- function(Tlen, L, B,
 # 
 A_small <- matrix(c(0.3, 0, -0.2, 0.7), byrow = T, nrow = 2)
 #test_data <- simulate_AR_process(Tlen = 500, A = A_small)
-test_df_1D <- sim_rej_rate(500, L = 10, B = 10, A_matrix = A_small, seq(0.01, 1, 0.01), repetitions = 500,
+test_df_1D <- sim_rej_rate(100, L = 10, B = 10, A_matrix = A_small, seq(0.01, 1, 0.01), repetitions = 100,
                            parametric = T,
                            remainder_true_ccfs = list(
                              true_phi = function(x, u, A) char_func_cond_X_next_given_X_previous_mat(A, x, u),
