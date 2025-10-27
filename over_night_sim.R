@@ -115,7 +115,9 @@ A4D[1, -1] <- 0
 # 
 
 #different chainlengths
-T500 <- 10
+T500 <- 500
+now_running <- T500
+
 
 message("T: ", T500, ", Y 4D")
 df_T500_4D <- sim_rej_rate(500, L = 5, B = 10, A_matrix = A4D, alphas = seq(0.01, 1, 0.01),
@@ -126,13 +128,13 @@ df_T500_4D <- sim_rej_rate(500, L = 5, B = 10, A_matrix = A4D, alphas = seq(0.01
                            parametric = TRUE
                         )
 
-
 saveRDS(df_T500_4D, file = "T500_4D.rds")
 
 
 
 ### ------------------ ####
 T2K <- 2000
+now_running <- T2K
 
 message("T: ", T2K , "Y 4D")
 df_T2K_4D <- sim_rej_rate(T2K, L = 10, B = 10, A4D, seq(0.01, 1, 0.01),
@@ -142,10 +144,12 @@ df_T2K_4D <- sim_rej_rate(T2K, L = 10, B = 10, A4D, seq(0.01, 1, 0.01),
                             ),
                           parametric = TRUE
                           )
+
 saveRDS(df_T2K_4D, file = "T2K_4D.rds")
 
 ### ------------------ ####
 T5K <- 5000
+now_running <- T5K
 
 message("T: ", T5K, ", Y 4D")
 df_T5K_4D <- sim_rej_rate(T5K, L = 10, B = 10, A4D, seq(0.01, 1, 0.01),
@@ -154,11 +158,12 @@ df_T5K_4D <- sim_rej_rate(T5K, L = 10, B = 10, A4D, seq(0.01, 1, 0.01),
                             true_psi = function(x, u, A, t) char_func_cond_Y_given_X_highdim_mat(A, t, x, u)
                           ),
                           parametric = TRUE
-)
+                        )
 saveRDS(df_T5K_4D, file = "T5K_4D.rds")
 
 # ### ------------------ ####
 T10K <- 10000
+now_running <- T10K
 
 message("T: ", T10K)
 df_T10K_4D <- sim_rej_rate(T10K, L = 10, B = 10, A4D, seq(0.01, 1, 0.01),
@@ -167,7 +172,7 @@ df_T10K_4D <- sim_rej_rate(T10K, L = 10, B = 10, A4D, seq(0.01, 1, 0.01),
                              true_psi = function(x, u, A, t) char_func_cond_Y_given_X_highdim_mat(A, t, x, u)
                            ),
                            parametric = TRUE
-)
+                          )
 saveRDS(df_T10K, file = "T10K_4D.rds")
 
 

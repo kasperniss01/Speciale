@@ -137,7 +137,8 @@ sim_rej_rate <- function(Tlen, L, B,
     }
     
     #print to see how far in loop
-    if (verbose && i %% 10 == 0) message(i)
+    #if (verbose && i %% 10 == 0) 
+      message(i)
   }
   
     #calculate mean and SEs
