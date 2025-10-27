@@ -17,9 +17,11 @@ estimate_stat <- function(data, L, B,
                           # p = floor(log(n * L)),
                           lgb_params = list(),
                           objective = "regression",
+                          parametric_plugin_AR1 = FALSE,
+                          A = NULL,
                           remainder_true_ccfs = list(true_phi = NULL, true_psi = NULL)
                           # for AR(1) processes: 
-                          # true ccf for phi should take only two arguments: a vector x, and a vector u
+                          # true ccf for phi should take only two arguments: a vector x, and a vector u, and a matrix A
                           # true ccf for psi should also take time input
                           # and return a length(x) times length(u) matrix
                           ) {
@@ -38,6 +40,7 @@ estimate_stat <- function(data, L, B,
   
   Covvar_Est <- list()
   Covvar_Est_true <- list()
+  Covvar_Est_parametric_plugin <- list()
   
   for (l in 1:(L - 1)) {
     # indices for training and evaluation
@@ -111,10 +114,11 @@ estimate_stat <- function(data, L, B,
     
     ### if true CCFs are give
     if (!is.null(remainder_true_ccfs$true_phi) && !is.null(remainder_true_ccfs$true_psi)) {
-      # browser()
+      #browser()
       
-      true_phi <- remainder_true_ccfs$true_phi(X_eval_phi, mu)
-      true_psi <- remainder_true_ccfs$true_psi(X_eval_psi, nu, index_eval_psi)
+      
+      true_phi <- remainder_true_ccfs$true_phi(X_eval_phi, mu, A)
+      true_psi <- remainder_true_ccfs$true_psi(X_eval_psi, nu, A, index_eval_psi)
       
       true_resX <- cc_X - true_phi
       true_resY <- cc_Y - true_psi
@@ -130,6 +134,35 @@ estimate_stat <- function(data, L, B,
       Covvar_Est_true[[l]] <- crossprod(cbind(Re(lambda_true), Im(lambda_true)))  # 2B x 2B
       
     }
+    
+    if(parametric_plugin_AR1) {
+      
+      fit <- vars::VAR(data)
+      A_parametric_plugin <- Acoef(fit)[[1]]
+      
+      parametric_plugin_phi <- function(x, mu) remainder_true_ccfs$true_phi(x, mu, A_parametric_plugin)
+      parametric_plugin_psi <- function(x, mu, t) remainder_true_ccfs$true_psi(x, mu, A_parametric_plugin, t)
+      
+      
+      phi_parametric_plugin <- parametric_plugin_phi(X_eval_phi, mu)
+      psi_parametric_plugin <- parametric_plugin_psi(X_eval_psi, nu, index_eval_psi)
+      
+      
+      resX_parametric_plugin <- cc_X - phi_parametric_plugin
+      resY_parametric_plugin <- cc_Y - psi_parametric_plugin
+      
+      
+      lambda_parametric_plugin <- resX_parametric_plugin * resY_parametric_plugin
+      
+      Gamma_parametric_plugin <- Gamma_hat + colSums(lambda_parametric_plugin - resX * resY)
+      
+      
+      Covvar_Est_parametric_plugin[[l]] <- crossprod(cbind(Re(lambda_parametric_plugin), Im(lambda_parametric_plugin)))  # 2B x 2B
+      # could also return S_parametric_plugin if desired      
+      
+      
+    }
+    
     
   }
   
@@ -168,6 +201,23 @@ estimate_stat <- function(data, L, B,
                           Covvar_Est_true = Covvar_Est_true,
                           true_Gamma = true_Gamma,
                           S_true = S_true))
+  }
+  
+  if(parametric_plugin_AR1) {
+    Covvar_Est_parametric_plugin <- Reduce("+", Covvar_Est_parametric_plugin) / normalizer
+    
+    Gamma_parametric_plugin <- Gamma_parametric_plugin / normalizer
+    
+    S_parametric_plugin <- sqrt(normalizer) * max(abs(c(Re(Gamma_parametric_plugin), Im(Gamma_parametric_plugin))))
+    
+    output <- append(output,
+                     list(parametric_plugin = 
+                            list(Covvar_Est_parametric_plugin = Covvar_Est_parametric_plugin,
+                                 Gamma_parametric_plugin = Gamma_parametric_plugin,
+                                 S_parametric_plugin = S_parametric_plugin)
+                          )
+                     )
+    
   }
   
   return(output)
