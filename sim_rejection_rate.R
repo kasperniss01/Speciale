@@ -25,8 +25,10 @@ sim_rej_rate <- function(Tlen, L, B,
                          verbose = TRUE) {
   
   # browser()
-  true_phi <- function(x, mu) remainder_true_ccfs$true_phi(x, mu, A)
-  true_psi <- function(x, mu, t) remainder_true_ccfs$true_psi(x, mu, A, t)
+  # true_phi <- function(x, mu) remainder_true_ccfs$true_phi(x, mu, A)
+  # true_psi <- function(x, mu, t) remainder_true_ccfs$true_psi(x, mu, A, t)
+  # these are seemingly not used?
+  
   
   d <- ncol(A_matrix) - 1
   
@@ -34,33 +36,28 @@ sim_rej_rate <- function(Tlen, L, B,
   nu <- matrix(rnorm(B * d), ncol = d)
   K <- length(alphas)
   
-  reject <- matrix(FALSE, nrow = K, ncol = repetitions,
-                   dimnames = list(paste0("alpha=", alphas), NULL))
   
-  if (d == 1 && parametric) {
-    parametric_reject <- matrix(FALSE, nrow = K, ncol = repetitions,
-                                dimnames = list(paste0("alpha=", alphas), NULL))
-  }
+  remainders <- data.frame()
   
-  
-  
-  if (!is.null(true_phi) && !is.null(true_psi)) {
-    reject_true <- matrix(FALSE, nrow = K, ncol = repetitions,
-                          dimnames = list(paste0("alpha=", alphas), NULL))
-    
-    remainders <- data.frame()
-    S_trues <- numeric(repetitions)
-    
-    covvar_true_list <- list()
-  }
+  S_trues <- numeric(repetitions)
+  covvar_true_list <- list()
+  reject_true <- matrix(FALSE, nrow = K, ncol = repetitions,
+                        dimnames = list(paste0("alpha=", alphas), NULL))
   
   S_hats <- numeric(repetitions)
   covvar_list <- list()
+  reject <- matrix(FALSE, nrow = K, ncol = repetitions,
+                   dimnames = list(paste0("alpha=", alphas), NULL))
+  
   
   S_parametric_plugins <- numeric(repetitions)
   covvar_parametric_plugins_list <- list()
   reject_parametric_plugins <- matrix(FALSE, nrow = K, ncol = repetitions,
                                       dimnames = list(paste0("alpha=", alphas), NULL))
+  
+  
+  parametric_reject <- matrix(FALSE, nrow = K, ncol = repetitions,
+                              dimnames = list(paste0("alpha=", alphas), NULL))
   
   data_list <- list()
   
@@ -163,7 +160,7 @@ sim_rej_rate <- function(Tlen, L, B,
       covvars <- append(covvars, list(parametric_plugin = covvar_parametric_plugins_list))
     }
     
-    if (!is.null(true_phi) && !is.null(true_psi)) {
+    if (!is.null(remainder_true_ccfs$true_phi) && !is.null(remainder_true_ccfs$true_psi)) {
       
       rates_true <- rowMeans(reject_true)
       ses_true <- sqrt(rates_true * (1 - rates_true) / repetitions)
@@ -185,7 +182,7 @@ sim_rej_rate <- function(Tlen, L, B,
                    data = data_list,
                    Tlen = Tlen)
     
-    if (!is.null(true_phi) && !is.null(true_psi)) {
+    if (!is.null(remainder_true_ccfs$true_phi) && !is.null(remainder_true_ccfs$true_psi)) {
       output <- append(output, list(remainders = remainders))
     }
     
