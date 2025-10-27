@@ -104,16 +104,17 @@ variance_Yt_highdim <- function(A, t, sigma_sq = 1) {
 }
 
 # Fast - chat - solution
-variance_Yt_closed_form <- function(a, b, C, t,
-                                    sigma1_sq = 1,           # Var(eps1)
-                                    Sigma2 = NULL,           # Var(eps2), default I_d
-                                    SigmaY0 = NULL,          # Var(Y_0)
-                                    v0 = 0,                  # Var(X_0)
-                                    r0 = NULL) {             # Cov(Y_0, X_0)
+variance_Yt_closed_form <- function(A, t,
+                                    sigma1_sq = 1) {   
+  
+  a <- as.numeric(A[1, 1])
+  b <- as.vector(A[-1, 1])
+  C <- as.matrix(A[-1, -1])
+  
   d <- nrow(C)
-  if (is.null(Sigma2))  Sigma2 <- diag(d)
-  if (is.null(SigmaY0)) SigmaY0 <- matrix(0, d, d)
-  if (is.null(r0))      r0 <- rep(0, d)
+  Sigma2 <- diag(d)
+  SigmaY0 <- matrix(0, d, d)
+  r0 <- rep(0, d)
   
   # Blocks for M
   M11 <- kronecker(C, C)                                  # d^2 x d^2
@@ -192,7 +193,8 @@ variance_conditional_Y_given_X_highdim <- function(A, t, sigma_sq = 1) {
   
   d <- nrow(C)
   
-  var_Yt <- variance_Yt_highdim(A, t) #d x d x length(t)
+  # var_Yt <- variance_Yt_highdim(A, t) #d x d x length(t)
+  var_Yt <- variance_Yt_closed_form(A, t)
   var_Xt <- variance_Xt(A, t) # length(t) x 1
   cov_Xt_Yt <- Covariance_Xt_Yt_highdim(A, t) # d x length(t)
   
@@ -276,7 +278,7 @@ char_func_cond_Y_given_X_highdim_mat <- function(A, t, x_t, u, sigma_sq = 1) {
   for (i in seq_along(t)) {
     mean_i <- mean[, i, drop = F] # dx1
     variance_i <- variance[, , i] #dxd
-    linear_term <- as.vector(u %*% mean_i) #Bx1
+    linear_term <- as.vector(u %*% mean_i) #Bx1 #throws an error right now... non-conformable arguments
     quad_term <- rowSums((u %*% variance_i) * u) # Bx1 - why rowSums?
     out[i, ] <- exp(1i * linear_term - 0.5 * quad_term) #char. function
   }
