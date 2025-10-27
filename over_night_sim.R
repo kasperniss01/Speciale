@@ -18,13 +18,28 @@ message("T: ", T500)
 df_T500 <- sim_rej_rate(T500, L, B, A, seq(0.01, 1, 0.01),
                         parametric = TRUE,
                         remainder_true_ccfs = list(
-                          true_phi = function(x, u) char_func_cond_X_next_given_X_previous_mat(A, x, u),
-                          true_psi = function(x, u, t) {
+                          true_phi = function(x, u, A) char_func_cond_X_next_given_X_previous_mat(A, x, u),
+                          true_psi = function(x, u, A, t) {
                             char_func_cond_Y_given_X_highdim_mat(A, t, x, u)
                           }
                         )
                         )
 saveRDS(df_T500, file = "T500.rds")
+
+### ------------------ ####
+T2K <- 1000
+n2K <- T2K / L
+
+message("T: ", T1K)
+df_T1K <- sim_rej_rate(T1000, L, B, A, seq(0.01, 1, 0.01),
+                       parametric = TRUE, 
+                       remainder_true_ccfs = list(
+                         true_phi = function(x, u, A) char_func_cond_X_next_given_X_previous_mat(A, x, u),
+                         true_psi = function(x, u, A, t) {
+                           char_func_cond_Y_given_X_highdim_mat(A, t, x, u)
+                         }
+                       ))
+saveRDS(df_T1K, file = "T1K.rds")
 
 ### ------------------ ####
 T2K <- 2000
@@ -34,42 +49,54 @@ message("T: ", T2K)
 df_T2K <- sim_rej_rate(T2K, L, B, A, seq(0.01, 1, 0.01),
                        parametric = TRUE, 
                        remainder_true_ccfs = list(
-                         true_phi = function(x, u) char_func_cond_X_next_given_X_previous_mat(A, x, u),
-                         true_psi = function(x, u, t) {
+                         true_phi = function(x, u, A) char_func_cond_X_next_given_X_previous_mat(A, x, u),
+                         true_psi = function(x, u, A, t) {
                            char_func_cond_Y_given_X_highdim_mat(A, t, x, u)
                          }
                        ))
 saveRDS(df_T2K, file = "T2K.rds")
 
 ### ------------------ ####
-T5K <- 5000
-n5K <- T5K / L
-
-message("T: ", T5K)
-df_T5K <- sim_rej_rate(T5K, L, B, A, seq(0.01, 1, 0.01),
-                       parametric = TRUE, 
-                       remainder_true_ccfs = list(
-                         true_phi = function(x, u) char_func_cond_X_next_given_X_previous_mat(A, x, u),
-                         true_psi = function(x, u, t) {
-                           char_func_cond_Y_given_X_highdim_mat(A, t, x, u)
-                         }
-                       ))
-saveRDS(df_T5K, file = "T5K.rds")
+# T5K <- 5000
+# n5K <- T5K / L
+# 
+# message("T: ", T5K)
+# df_T5K <- sim_rej_rate(T5K, L, B, A, seq(0.01, 1, 0.01),
+#                        parametric = TRUE, 
+#                        remainder_true_ccfs = list(
+#                          true_phi = function(x, u, A) char_func_cond_X_next_given_X_previous_mat(A, x, u),
+#                          true_psi = function(x, u, A, t) {
+#                            char_func_cond_Y_given_X_highdim_mat(A, t, x, u)
+#                          }
+#                        ))
+# saveRDS(df_T5K, file = "T5K.rds")
 
 ### ------------------ ####
-T10K <- 10000
-n10K <- T10K / L
-
 message("T: ", T10K)
-df_T10K <- sim_rej_rate(T10K, L, B, A, seq(0.01, 1, 0.01),
+df_T7500 <- sim_rej_rate(7500, L, B, A, seq(0.01, 1, 0.01),
                         parametric = TRUE,
                         remainder_true_ccfs = list(
-                          true_phi = function(x, u) char_func_cond_X_next_given_X_previous_mat(A, x, u),
-                          true_psi = function(x, u, t) {
+                          true_phi = function(x, u, A) char_func_cond_X_next_given_X_previous_mat(A, x, u),
+                          true_psi = function(x, u, A, t) {
                             char_func_cond_Y_given_X_highdim_mat(A, t, x, u)
                           }
                         ))
-saveRDS(df_T10K, file = "T10K.rds")
+saveRDS(df_T7500, file = "T7500.rds")
+
+### ------------------ ####
+# T10K <- 10000
+# n10K <- T10K / L
+# 
+# message("T: ", T10K)
+# df_T10K <- sim_rej_rate(T10K, L, B, A, seq(0.01, 1, 0.01),
+#                         parametric = TRUE,
+#                         remainder_true_ccfs = list(
+#                           true_phi = function(x, u, A) char_func_cond_X_next_given_X_previous_mat(A, x, u),
+#                           true_psi = function(x, u, A, t) {
+#                             char_func_cond_Y_given_X_highdim_mat(A, t, x, u)
+#                           }
+#                         ))
+# saveRDS(df_T10K, file = "T10K.rds")
 
 #rerunning usual stuff to also get remainders
 
@@ -88,35 +115,55 @@ L <- L
 T500 <- 500
 
 message("T: ", T500, ", Y 4D")
-df_T500_4D <- sim_rej_rate(T500, L, B, A, seq(0.01, 1, 0.01),
+df_T500_4D <- sim_rej_rate(T500, L = 10, B = 10, A4D, seq(0.01, 1, 0.01),
                            remainder_true_ccfs = list(
-                             true_phi = function(x, u) char_func_cond_X_next_given_X_previous_mat(A4D, x, u),
-                             true_psi = function(x, u, t) {
-                               char_func_cond_Y_given_X_highdim_mat(A4D, t, x, u)
+                             true_phi = function(x, u, A) char_func_cond_X_next_given_X_previous_mat(A, x, u),
+                             true_psi = function(x, u, A, t) {
+                               char_func_cond_Y_given_X_highdim_mat(A, t, x, u)
                              }
                            ))
 saveRDS(df_T500_4D, file = "T500_4D.rds")
+
+
 
 ### ------------------ ####
 T2K <- 2000
 
 message("T: ", T2K , "Y 4D")
-df_T2K_4D <- sim_rej_rate(T2K, L, B, A4D, seq(0.01, 1, 0.01))
+df_T2K_4D <- sim_rej_rate(T2K, L = 10, B = 10, A4D, seq(0.01, 1, 0.01),
+                          remainder_true_ccfs = list(
+                            true_phi = function(x, u, A) char_func_cond_X_next_given_X_previous_mat(A, x, u),
+                            true_psi = function(x, u, A, t) {
+                              char_func_cond_Y_given_X_highdim_mat(A, t, x, u)
+                            }
+                          ))
 saveRDS(df_T2K_4D, file = "T2K_4D.rds")
 
 ### ------------------ ####
 T5K <- 5000
 
 message("T: ", T5K, ", Y 4D")
-df_T5K_4D <- sim_rej_rate(T5K, L, B, A4D, seq(0.01, 1, 0.01))
+df_T5K_4D <- sim_rej_rate(T5K, L = 10, B = 10, A4D, seq(0.01, 1, 0.01),
+                          remainder_true_ccfs = list(
+                            true_phi = function(x, u, A) char_func_cond_X_next_given_X_previous_mat(A, x, u),
+                            true_psi = function(x, u, A, t) {
+                              char_func_cond_Y_given_X_highdim_mat(A, t, x, u)
+                            }
+                          ))
 saveRDS(df_T5K_4D, file = "T5K_4D.rds")
 
 # ### ------------------ ####
-# T10K <- 10000
-# 
-# message("T: ", T10K)
-# df_T10K_4D <- sim_rej_rate(T10K, L, B, A4D, seq(0.01, 1, 0.01))
-# saveRDS(df_T10K, file = "T10K.rds")
+T10K <- 10000
+
+message("T: ", T10K)
+df_T10K_4D <- sim_rej_rate(T10K, L = 10, B = 10, A4D, seq(0.01, 1, 0.01),
+                           remainder_true_ccfs = list(
+                             true_phi = function(x, u, A) char_func_cond_X_next_given_X_previous_mat(A, x, u),
+                             true_psi = function(x, u, A, t) {
+                               char_func_cond_Y_given_X_highdim_mat(A, t, x, u)
+                             }
+                           ))
+saveRDS(df_T10K, file = "T10K.rds")
 
 
 
