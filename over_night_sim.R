@@ -17,12 +17,12 @@ n500 <- T500 / L
 message("T: ", T500)
 df_T500 <- sim_rej_rate(T500, L, B, A, seq(0.01, 1, 0.01),
                         parametric = TRUE,
-                        # remainder_true_ccfs = list(
-                        #   true_phi = function(x, u) char_func_cond_X_next_given_X_previous_mat(A, x, u),
-                        #   true_psi = function(x, u, t) {
-                        #     char_func_cond_Y_given_X_highdim_mat(A, t, x, u)
-                        #   }
-                        # )
+                        remainder_true_ccfs = list(
+                          true_phi = function(x, u) char_func_cond_X_next_given_X_previous_mat(A, x, u),
+                          true_psi = function(x, u, t) {
+                            char_func_cond_Y_given_X_highdim_mat(A, t, x, u)
+                          }
+                        )
                         )
 saveRDS(df_T500, file = "T500.rds")
 

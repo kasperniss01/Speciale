@@ -115,6 +115,7 @@ variance_Yt_closed_form <- function(A, t,
   Sigma2 <- diag(d)
   SigmaY0 <- matrix(0, d, d)
   r0 <- rep(0, d)
+  v0 <- 0
   
   # Blocks for M
   M11 <- kronecker(C, C)                                  # d^2 x d^2
@@ -148,6 +149,68 @@ variance_Yt_closed_form <- function(A, t,
   # Extract Var(Y_t)
   vec_Sig <- st[seq_len(d * d)]
   matrix(vec_Sig, nrow = d, ncol = d)
+}
+
+variance_Yt_closed_form_array <- function(A, t, sigma1_sq = 1) {
+  
+  a <- as.numeric(A[1, 1])
+  b <- as.vector(A[-1, 1])
+  C <- as.matrix(A[-1, -1])
+  
+  d <- nrow(C)
+  Sigma2 <- diag(d)           # Var(ε_Y) = I_d  (change here if needed)
+  SigmaY0 <- matrix(0, d, d)  # Var(Y_0) (adjust if needed)
+  r0 <- rep(0, d)             # Cov(X_0, Y_0) component (as in your state)
+  v0 <- 0                     # Var(X_0)
+  
+  # --- Build block companion M as in your scalar 'closed_form' ---
+  M11 <- kronecker(C, C)                                  # d^2 x d^2
+  M12 <- kronecker(b, C) + kronecker(C, b)                # d^2 x d
+  M13 <- matrix(as.vector(b %*% t(b)), nrow = d^2, ncol = 1)
+  M14 <- matrix(as.vector(Sigma2),    nrow = d^2, ncol = 1)
+  
+  M21 <- matrix(0, d, d^2);      M22 <- a * C
+  M23 <- matrix(a * b, d, 1);    M24 <- matrix(0, d, 1)
+  
+  M31 <- matrix(0, 1, d^2);      M32 <- matrix(0, 1, d)
+  M33 <- matrix(a^2, 1, 1);      M34 <- matrix(sigma1_sq, 1, 1)
+  
+  M41 <- matrix(0, 1, d^2);      M42 <- matrix(0, 1, d)
+  M43 <- matrix(0, 1, 1);        M44 <- matrix(1, 1, 1)
+  
+  M <- rbind(
+    cbind(M11, M12, M13, M14),
+    cbind(M21, M22, M23, M24),
+    cbind(M31, M32, M33, M34),
+    cbind(M41, M42, M43, M44)
+  )
+  
+  # initial state s0 = [vec(SigmaY0); r0; v0; 1]
+  s0 <- c(as.vector(SigmaY0), r0, v0, 1)
+  
+  # --- Eigen decomposition for fast powers M^t ---
+  eg <- eigen(M)                  # may be complex; that's fine
+  V  <- eg$vectors
+  lam <- eg$values
+  Vinv_s0 <- solve(V, s0)         # V^{-1} s0   (one solve)
+  
+  # matrix of λ_i^{t_j}: (dim(M) x length(t_vec))
+  LamPow <- outer(lam, t, function(l, tt) l^tt)
+  
+  # columns are s_t for each t: s_t = V %*% diag(lam^t) %*% V^{-1} s0
+  # = V %*% ((lam^t) * (V^{-1} s0))   (elementwise *)
+  ST <- V %*% sweep(LamPow, 1, Vinv_s0, `*`)   # dim = dim(M) x |t_vec|
+  
+  # extract vec(Var(Y_t)) = first d^2 rows, then reshape to d x d x |t|
+  vec_S <- ST[seq_len(d * d), , drop = FALSE]
+  # ensure real (small imaginary noise can appear numerically)
+  vec_S <- Re(vec_S)
+  
+  out <- array(NA_real_, dim = c(d, d, length(t)))
+  for (j in seq_along(t)) out[, , j] <- matrix(vec_S[, j], nrow = d, ncol = d)
+  
+  # if a single t was passed, keep 3D array (like your first function), no drop
+  out
 }
 
 
@@ -194,7 +257,7 @@ variance_conditional_Y_given_X_highdim <- function(A, t, sigma_sq = 1) {
   d <- nrow(C)
   
   # var_Yt <- variance_Yt_highdim(A, t) #d x d x length(t)
-  var_Yt <- variance_Yt_closed_form(A, t)
+  var_Yt <- variance_Yt_closed_form_array(A, t)
   var_Xt <- variance_Xt(A, t) # length(t) x 1
   cov_Xt_Yt <- Covariance_Xt_Yt_highdim(A, t) # d x length(t)
   
