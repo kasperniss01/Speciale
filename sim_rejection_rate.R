@@ -35,7 +35,7 @@ sim_rej_rate <- function(Tlen, L, B,
   reject <- matrix(FALSE, nrow = K, ncol = repetitions,
                    dimnames = list(paste0("alpha=", alphas), NULL))
   
-  if (d == 1) {
+  if (d == 1 && parametric) {
     parametric_reject <- matrix(FALSE, nrow = K, ncol = repetitions,
                                 dimnames = list(paste0("alpha=", alphas), NULL))
   }
@@ -75,7 +75,7 @@ sim_rej_rate <- function(Tlen, L, B,
     reject[, i] <- (S_hat > crits)
     
     ## if parametric is TRUE
-    if (d == 1) {
+    if (d == 1 && parametric) {
       fit <- vars::VAR(data, p = 1)
       p_val <- coefficients(fit)$X["Y1.l1", ] %>% tail(1) #only works in Y 1D case right now
       parametric_reject[, i] <- (p_val < alphas)

@@ -5,7 +5,7 @@ source("conditional_distributions.R")
 
 
 #setup
-A <- matrix(c(-0.4, 0, -0.3, 0.8), nrow = 2, byrow = T)
+A <- matrix(c(-0.4, -0.3, 0, 0.8), nrow = 2)
 B <- 10
 L <- 10
 

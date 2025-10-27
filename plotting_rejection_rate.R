@@ -111,14 +111,14 @@ plot_remainder_decays <- function(...) {
   }
   
   combined_data_frame <- bind_rows(dfs)
-  browser()
+  # browser()
   
   summarized_df <- combined_data_frame %>%
     group_by(Tlen) %>%
     mutate(
-      R1_rate = R1 * log(Tlen),
-      R2_rate = R2 * log(Tlen),
-      R3_rate = R3 * log(Tlen)
+      R1_rate = R1 * sqrt(log(Tlen)),
+      R2_rate = R2 * sqrt(log(Tlen)),
+      R3_rate = R3 * sqrt(log(Tlen))
     ) %>%
     summarise(
       mean_R1_rate = mean(R1_rate, na.rm = TRUE),
