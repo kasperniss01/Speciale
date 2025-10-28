@@ -137,7 +137,8 @@ sim_rej_rate <- function(Tlen, L, B,
     }
     
     #print to see how far in loop
-    if (verbose && i %% 10 == 0) message(i)
+    #if (verbose && i %% 10 == 0) 
+      message(i)
   }
   
     #calculate mean and SEs
@@ -214,7 +215,7 @@ sim_rej_rate <- function(Tlen, L, B,
 # # data_test <- simulate_AR_process(Tlen, A)
 # # estimate_stat(data_test, L, B)
 # 
-# test_df_highdim_T10 <- sim_rej_rate(100, L = 2, B = 2, A = A, alphas = seq(0.1,1, 0.05), repetitions = 100,
+# test_df_highdim_T10 <- sim_rej_rate(10, L = 2, B = 2, A_matrix = A, alphas = seq(0.1,1, 0.05), repetitions = 10,
 #                         remainder_true_ccfs = list(
 #                                           true_phi = function(x, u, A) char_func_cond_X_next_given_X_previous_mat(A, x, u),
 #                                           true_psi = function(x, u, A, t) {
@@ -222,6 +223,8 @@ sim_rej_rate <- function(Tlen, L, B,
 #                                           }
 #                                         ),
 #                         parametric = TRUE)
+
+
 # T20 <- 20
 # test_df_highdim_T20 <- sim_rej_rate(T20, L, B, A, c(0.1, 0.2), repetitions = 12,
 #                                     remainder_true_ccfs = list(
@@ -241,7 +244,7 @@ sim_rej_rate <- function(Tlen, L, B,
 #                                     ))
 # 
 # A_small <- matrix(c(0.3, 0, -0.2, 0.7), byrow = T, nrow = 2)
-#test_data <- simulate_AR_process(Tlen = 500, A = A_small)
+# #test_data <- simulate_AR_process(Tlen = 500, A = A_small)
 # test_df_1D <- sim_rej_rate(100, L = 10, B = 10, A_matrix = A_small, seq(0.01, 1, 0.01), repetitions = 100,
 #                            parametric = T,
 #                            remainder_true_ccfs = list(
