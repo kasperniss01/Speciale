@@ -12,6 +12,7 @@
 ### TODO: consider if we want to pass noise variance
 ### TODO: fix function names
 ### TODO: above includes highdim suffix
+### TODO: make sure used packages are installed
 
 
 ### --- WARNING: all these functions only work under the hypothesis --- ###
@@ -21,24 +22,23 @@ library(expm)
 
 ### ------------ Variance for X process --------------- ###
 
-# the formula for the variance of X_t is the same for every dimension of Y_t
 variance_Xt <- function(A, t, sigma1_sq = 1) {
-  #A a (d+1) x (d+1) autoregressive matrix
-  #t is a vector of time-inputs
+  # A a (d+1) x (d+1) autoregressive matrix
+  # t is a vector of time-inputs
   
   #returns a vector of length(t)
   
   a <- as.numeric(A[1, 1]) #a scalar 
   
   sigma1_sq * (1 - a^(2 * t)) / (1 - a^2) 
-} #might be a bit silly to give full A as argument here?
+} 
 
 
 ### ---------- Covariance between X_t and Y_t ----------- ###
 
 Covariance_Xt_Yt_highdim <- function(A, t, sigma1_sq = 1) {
-  #A a (d+1) x (d+1) autoregressive matrix
-  #t is vector of time-inputs
+  # A a (d+1) x (d+1) autoregressive matrix
+  # t is vector of time-inputs
   
   #returns a d x length(t) matrix
   
@@ -50,7 +50,6 @@ Covariance_Xt_Yt_highdim <- function(A, t, sigma1_sq = 1) {
   
   d <- nrow(C) 
   I_d <- diag(d)
-  # browser()
   out <- matrix(0, nrow = d, ncol = length(t))
   b <- matrix(b, ncol = 1)
   
@@ -65,8 +64,9 @@ Covariance_Xt_Yt_highdim <- function(A, t, sigma1_sq = 1) {
 }
 
 ### ------------------ Variance for Y process -------------- ###
+
 variance_Yt_highdim <- function(A, t, sigma_sq = 1) {
-  #A a (d+1) x (d+1) autoregressive matrix
+  # A a (d+1) x (d+1) autoregressive matrix
   # t vector of time-imputs
   
   # returns d x d x length(t) array
@@ -103,9 +103,11 @@ variance_Yt_highdim <- function(A, t, sigma_sq = 1) {
   return(out)
 }
 
-# Fast - chat - solution
-variance_Yt_closed_form <- function(A, t,
-                                    sigma1_sq = 1) {   
+
+
+variance_Yt_closed_form_array <- function(A, t, sigma1_sq = 1) {
+  # A a (d+1)x(d+1) matrix
+  # t a vector of time-inputs
   
   a <- as.numeric(A[1, 1])
   b <- as.vector(A[-1, 1])
@@ -113,57 +115,13 @@ variance_Yt_closed_form <- function(A, t,
   
   d <- nrow(C)
   Sigma2 <- diag(d)
-  SigmaY0 <- matrix(0, d, d)
-  r0 <- rep(0, d)
-  v0 <- 0
   
-  # Blocks for M
-  M11 <- kronecker(C, C)                                  # d^2 x d^2
-  M12 <- kronecker(b, C) + kronecker(C, b)                # d^2 x d
-  M13 <- matrix(as.vector(b %*% t(b)), nrow = d^2, ncol = 1)
-  M14 <- matrix(as.vector(Sigma2),    nrow = d^2, ncol = 1)
+  # Initialization
+  SigmaY0 <- matrix(0, d, d)  
+  r0 <- rep(0, d)             
+  v0 <- 0                     
   
-  M21 <- matrix(0, d, d^2);      M22 <- a * C
-  M23 <- matrix(a * b, d, 1);    M24 <- matrix(0, d, 1)
-  
-  M31 <- matrix(0, 1, d^2);      M32 <- matrix(0, 1, d)
-  M33 <- matrix(a^2, 1, 1);      M34 <- matrix(sigma1_sq, 1, 1)
-  
-  M41 <- matrix(0, 1, d^2);      M42 <- matrix(0, 1, d)
-  M43 <- matrix(0, 1, 1);        M44 <- matrix(1, 1, 1)
-  
-  # Assemble M
-  M <- rbind(
-    cbind(M11, M12, M13, M14),
-    cbind(M21, M22, M23, M24),
-    cbind(M31, M32, M33, M34),
-    cbind(M41, M42, M43, M44)
-  )
-  
-  # Initial state s0 = [vec(Sigma0); r0; v0; 1]
-  s0 <- c(as.vector(SigmaY0), as.vector(r0), v0, 1)
-  
-  # One shot: s_t = M^t s0
-  st <- (M %^% t) %*% s0
-  
-  # Extract Var(Y_t)
-  vec_Sig <- st[seq_len(d * d)]
-  matrix(vec_Sig, nrow = d, ncol = d)
-}
-
-variance_Yt_closed_form_array <- function(A, t, sigma1_sq = 1) {
-  
-  a <- as.numeric(A[1, 1])
-  b <- as.vector(A[-1, 1])
-  C <- as.matrix(A[-1, -1])
-  
-  d <- nrow(C)
-  Sigma2 <- diag(d)           # Var(ε_Y) = I_d  (change here if needed)
-  SigmaY0 <- matrix(0, d, d)  # Var(Y_0) (adjust if needed)
-  r0 <- rep(0, d)             # Cov(X_0, Y_0) component (as in your state)
-  v0 <- 0                     # Var(X_0)
-  
-  # --- Build block companion M as in your scalar 'closed_form' ---
+  # --- Build block companion M ---
   M11 <- kronecker(C, C)                                  # d^2 x d^2
   M12 <- kronecker(b, C) + kronecker(C, b)                # d^2 x d
   M13 <- matrix(as.vector(b %*% t(b)), nrow = d^2, ncol = 1)
@@ -219,9 +177,9 @@ variance_Yt_closed_form_array <- function(A, t, sigma1_sq = 1) {
 ### ---------- Implementation of conditional mean function --------- ###
 
 mean_conditional_Y_given_X_highdim <- function(A, t, x_t, sigma_sq = 1) {
-  #A a (d+1) x (d+1) autoregressive matrix
+  # A a (d+1) x (d+1) autoregressive matrix
   # t is vector of time inputs
-  #x_t is vector of x to condition on same length as t
+  # x_t is vector of x to condition on same length as t
   
   # output matrix of size d x length(t)
   
@@ -241,14 +199,11 @@ mean_conditional_Y_given_X_highdim <- function(A, t, x_t, sigma_sq = 1) {
 
 ### --------- Implementation of conditional variance function ------ ####
 
-#maybe deprecated?
 variance_conditional_Y_given_X_highdim <- function(A, t, sigma_sq = 1) {
-  #A a (d+1) x (d+1) autoregressive matrix
+  # A a (d+1) x (d+1) autoregressive matrix
   # t is vector of time inputs
   
-  #outputs 3D array of dimension d x d x length(t)
-  
-  # browser()
+  # outputs 3D array of dimension d x d x length(t)
   
   a <- as.numeric(A[1, 1]) #scalar
   b <- as.vector(A[-1, 1]) #dx1 vector
@@ -256,8 +211,7 @@ variance_conditional_Y_given_X_highdim <- function(A, t, sigma_sq = 1) {
   
   d <- nrow(C)
   
-  # var_Yt <- variance_Yt_highdim(A, t) #d x d x length(t)
-  var_Yt <- variance_Yt_closed_form_array(A, t)
+  var_Yt <- variance_Yt_closed_form_array(A, t) #d x d x length(t)
   var_Xt <- variance_Xt(A, t) # length(t) x 1
   cov_Xt_Yt <- Covariance_Xt_Yt_highdim(A, t) # d x length(t)
   
@@ -279,21 +233,6 @@ variance_conditional_Y_given_X_highdim <- function(A, t, sigma_sq = 1) {
 ### ------ Implementation of CCFs --------- ###
 
 ### ---------- CCF of X_{t+1} | X_t ---------- ###
-# deprecated?
-char_func_conditional_X_next_given_X_previous <- function(A, x_prev, u) {
-  #A a (d+1) x (d+1) autoregressive matrix
-  #x_prev is a vector of xs used to condition on
-  #u is a vector of evaluation points the same length as x_prev
-  
-  #returns length(u) vector
-  
-  a <- as.numeric(A[1, 1]) #scalar
-  
-  mean_X_next_given_X_prev <- a * x_prev
-  
-  exp(1i * u * mean_X_next_given_X_prev - 0.5 * u^2)
-}
-
 
 char_func_cond_X_next_given_X_previous_mat <- function(A, x_prev, u) {
   #A a (d+1) x (d+1) autoregressive matrix
@@ -301,8 +240,6 @@ char_func_cond_X_next_given_X_previous_mat <- function(A, x_prev, u) {
   #u a vector
   
   #returns a matrix of dimension length(x_prev) x length(u)
-  
-  # browser()
   
   a <- as.numeric(A[1, 1])
   
@@ -317,9 +254,9 @@ char_func_cond_X_next_given_X_previous_mat <- function(A, x_prev, u) {
 ### ----------- CCF of Y_t | X_t ----------- ####
 
 char_func_cond_Y_given_X_highdim_mat <- function(A, t, x_t, u, sigma_sq = 1) {
-  #A a (d+1) x (d+1) autoregressive matrix
-  #t is a vector of time input
-  #x_t is a sequence of x to condition on same length as t
+  # A a (d+1) x (d+1) autoregressive matrix
+  # t is a vector of time input
+  # x_t is a sequence of x to condition on same length as t
   # u is either a matrix of size either dx1 or B x d if mu or nu is input
   
   # returns matrix of size length(t) x length(u)
@@ -331,18 +268,17 @@ char_func_cond_Y_given_X_highdim_mat <- function(A, t, x_t, u, sigma_sq = 1) {
   B <- nrow(u)
   d <- length(b)
   
-  if(nrow(u) == d) u <- t(u) #transpose if u is a dx1 matrix - why I don't know
+  if(nrow(u) == d) u <- t(u) #transpose if u is a dx1 matrix 
   
   mean <- mean_conditional_Y_given_X_highdim(A, t, x_t, sigma_sq) # d x length(t)
   variance <- variance_conditional_Y_given_X_highdim(A, t, sigma_sq) #d x d x length(t)
-  #variance could also just be a matrix I think if t has length 1?
   
   out <- matrix(0, nrow = length(t), ncol = B)
   for (i in seq_along(t)) {
     mean_i <- mean[, i, drop = F] # dx1
     variance_i <- variance[, , i] #dxd
     linear_term <- as.vector(u %*% mean_i) #Bx1 #throws an error right now... non-conformable arguments
-    quad_term <- rowSums((u %*% variance_i) * u) # Bx1 - why rowSums?
+    quad_term <- rowSums((u %*% variance_i) * u) # Bx1 
     out[i, ] <- exp(1i * linear_term - 0.5 * quad_term) #char. function
   }
   
@@ -354,13 +290,7 @@ char_func_cond_Y_given_X_highdim_mat <- function(A, t, x_t, u, sigma_sq = 1) {
 
 
 
-
-
-
-
-
-
-### ----------- deprecated 1D functions --------- ###
+### ----------- deprecated functions --------- ###
 
 ### For Y one-dimensional ###
 
@@ -392,6 +322,20 @@ char_func_cond_Y_given_X_highdim_mat <- function(A, t, x_t, u, sigma_sq = 1) {
 #   var_Yt - cov_Xt_Yt^2 / var_Xt
 # }
 
+# char_func_conditional_X_next_given_X_previous <- function(A, x_prev, u) {
+#   #A a (d+1) x (d+1) autoregressive matrix
+#   #x_prev is a vector of xs used to condition on
+#   #u is a vector of evaluation points the same length as x_prev
+#   
+#   #returns length(u) vector
+#   
+#   a <- as.numeric(A[1, 1]) #scalar
+#   
+#   mean_X_next_given_X_prev <- a * x_prev
+#   
+#   exp(1i * u * mean_X_next_given_X_prev - 0.5 * u^2)
+# }
+
 
 ## when Y is one-dimensional
 
@@ -420,3 +364,51 @@ char_func_cond_Y_given_X_highdim_mat <- function(A, t, x_t, u, sigma_sq = 1) {
 # d = 40
 # 
 # variance_Yt_closed_form(a = 0.5, b= rep(0.2, d), C = matrix(1:d^2, nrow = d, ncol = d), t = 10)
+
+
+# variance_Yt_closed_form <- function(A, t,
+#                                     sigma1_sq = 1) {   
+#   
+#   a <- as.numeric(A[1, 1])
+#   b <- as.vector(A[-1, 1])
+#   C <- as.matrix(A[-1, -1])
+#   
+#   d <- nrow(C)
+#   Sigma2 <- diag(d)
+#   SigmaY0 <- matrix(0, d, d)
+#   r0 <- rep(0, d)
+#   v0 <- 0
+#   
+#   # Blocks for M
+#   M11 <- kronecker(C, C)                                  # d^2 x d^2
+#   M12 <- kronecker(b, C) + kronecker(C, b)                # d^2 x d
+#   M13 <- matrix(as.vector(b %*% t(b)), nrow = d^2, ncol = 1)
+#   M14 <- matrix(as.vector(Sigma2),    nrow = d^2, ncol = 1)
+#   
+#   M21 <- matrix(0, d, d^2);      M22 <- a * C
+#   M23 <- matrix(a * b, d, 1);    M24 <- matrix(0, d, 1)
+#   
+#   M31 <- matrix(0, 1, d^2);      M32 <- matrix(0, 1, d)
+#   M33 <- matrix(a^2, 1, 1);      M34 <- matrix(sigma1_sq, 1, 1)
+#   
+#   M41 <- matrix(0, 1, d^2);      M42 <- matrix(0, 1, d)
+#   M43 <- matrix(0, 1, 1);        M44 <- matrix(1, 1, 1)
+#   
+#   # Assemble M
+#   M <- rbind(
+#     cbind(M11, M12, M13, M14),
+#     cbind(M21, M22, M23, M24),
+#     cbind(M31, M32, M33, M34),
+#     cbind(M41, M42, M43, M44)
+#   )
+#   
+#   # Initial state s0 = [vec(Sigma0); r0; v0; 1]
+#   s0 <- c(as.vector(SigmaY0), as.vector(r0), v0, 1)
+#   
+#   # One shot: s_t = M^t s0
+#   st <- (M %^% t) %*% s0
+#   
+#   # Extract Var(Y_t)
+#   vec_Sig <- st[seq_len(d * d)]
+#   matrix(vec_Sig, nrow = d, ncol = d)
+# }

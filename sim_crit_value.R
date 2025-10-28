@@ -2,7 +2,7 @@
 
 sim_crit_draws <- function(covvar, nrep = 1e5) {
   # covvar is a covvariance matrix
-  #nrep is number of replications for quantile determination
+  # nrep is number of replications for quantile determination
   
   #returns vector of length(nrep) of samples from ||N(0, covvar)||_infty
   
