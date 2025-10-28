@@ -2,13 +2,18 @@
 
 ### todo: add docstrings 
 
-### fitting a lightgbm regression model that defaults to squared-error-loss  
+### fitting a lightgbm regression model that defaults to squared-error-loss ###
 fit_lgb <- function(X, y, num_round = 300, params = list(),
                     objective = "regression") {
+  
+  # X covariates
+  # y response
+  # objective is what kind of regression to do
+  
   dtrain <- lgb.Dataset(data = as.matrix(X), label = y)
   default <- list(
     objective = objective,
-    learning_rate = 0.05, # what is all this
+    learning_rate = 0.05,  #hopefully sane parameters 
     num_leaves = 31,
     min_data_in_leaf = 20,
     feature_fraction = 0.9,
@@ -18,13 +23,23 @@ fit_lgb <- function(X, y, num_round = 300, params = list(),
     seed = 1
   )
   params <- modifyList(default, params)
-  lgb.train(params = params, data = dtrain, nrounds = num_round)
+  lgb.train(params = params, data = dtrain, nrounds = num_round) #fits lgb model
 }
 
-### function to create estimate of phi across multiple values of mu
+
+### ------------ estimates of phi and psi -------------- ###
+
+### phi_hat trained on training_X, evaluated on evaluation_X for multiple mu ###
+
 phi_hat <- function(training_X, training_X_shifted , evaluation_X, mu, num_rounds, lgb_params,
                     objective = "regression") {
-  #objective defaults to L2 regression
+  # training X are X to be trained on
+  # evaluation X are X to be evaluated on
+  # mu are evaluation points for characteristic functions 
+    # also used as covariates!
+  
+  # returns matrix of predictions based on lgbm-model
+  
   N_train <- length(training_X)
   N_eval <- length(evaluation_X)
   B <- if (is.matrix(mu)) nrow(mu) else length(mu)
@@ -70,7 +85,13 @@ phi_hat <- function(training_X, training_X_shifted , evaluation_X, mu, num_round
 ### function to create estimate of psi across multiple values of nu
 psi_hat <- function(training_X, training_Y , evaluation_X, nu, num_rounds, lgb_params,
                     objective = "regression") {
-  #objective defaults to L2 regression
+  # training X and Y are X and Y to be trained on
+  # evaluation X are X to be evaluated on
+  # nu are evaluation points for characteristic functions 
+  # also used as covariates!
+  
+  # returns matrix of predictions based on lgbm-model
+  
   N_train <- length(training_X)
   N_eval <- length(evaluation_X)
   B <- if (is.matrix(nu)) nrow(nu) else length(nu)
