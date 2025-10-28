@@ -173,7 +173,7 @@ df_T10K_4D <- sim_rej_rate(T10K, L = 10, B = 10, A4D, seq(0.01, 1, 0.01),
                            ),
                            parametric = TRUE
                           )
-saveRDS(df_T10K, file = "T10K_4D.rds")
+saveRDS(df_T10K_4D, file = "T10K_4D.rds")
 
 
 
