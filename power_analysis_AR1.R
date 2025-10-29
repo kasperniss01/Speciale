@@ -194,7 +194,7 @@ for(Tlen in powerTs) {
                               true_psi = function(x, u, A, t) {
                                 char_func_cond_Y_given_X_highdim_mat(A, t, x, u)
                               }
-                            ), repetitions = 1
+                            ),
     )
     
     PowerAnalysisLists_smallGamma[[paste0("T",as.character(Tlen))]][[paste0("gamma", as.character(gamma))]] <- df_power
