@@ -134,13 +134,10 @@ powerTs <- c(2000, 3000)
 #   
 # }
 
-saveRDS(PowerAnalysis_AR1_4D, file = "datasets/PowerAnalysis_AR1_4D.rds")
+#saveRDS(PowerAnalysis_AR1_4D, file = "datasets/PowerAnalysis_AR1_4D.rds")
 
 
-PowerAnalysis_AR1_4D$T3000$gamma0.666$rejection_rate_df
-
-
-
+PowerAnalysis_AR1_4D <- readRDS("datasets/PowerAnalysis_AR1_4D.rds")
 
 
 # PLOTTING THE POWER ANALYSIS RESULTS ON T = 2000, gamma = 0.003
@@ -176,6 +173,37 @@ PowerAnalysis_AR1_4D$T2000$gamma0.03$rejection_rate_df %>%
        color = "Method",
        fill = "Method")
 
+
+
+
+gammas <- seq(0.05,0.2,0.05)
+powerTs <- c(2000)
+PowerAnalysisLists_smallGamma<- list()
+for(Tlen in powerTs) {
+  PowerAnalysisLists_smallGamma[[paste0("T",as.character(Tlen))]] <- list()
+  
+  
+  for(gamma in gammas) {
+    A_alt <- alternative_matrix(gamma = gamma, d = 3, vec = c(1,1,1), seed = 100)
+    
+    message("T: ", Tlen, " | gamma: ", gamma)
+    df_power <- sim_rej_rate(Tlen, L = 10, B = 10, A = A_alt, alphas = seq(0.01, 1, 0.01),
+                            parametric = TRUE,
+                            remainder_true_ccfs = list(
+                              true_phi = function(x, u, A) char_func_cond_X_next_given_X_previous_mat(A, x, u),
+                              true_psi = function(x, u, A, t) {
+                                char_func_cond_Y_given_X_highdim_mat(A, t, x, u)
+                              }
+                            ), repetitions = 1
+    )
+    
+    PowerAnalysisLists_smallGamma[[paste0("T",as.character(Tlen))]][[paste0("gamma", as.character(gamma))]] <- df_power
+  }
+  
+}
+
+
+PowerAnalysisLists_smallGamma$T2000$gamma0.05$rejection_rate_df
 
 
 
