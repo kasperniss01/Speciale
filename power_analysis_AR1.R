@@ -1,3 +1,4 @@
+rm(list = ls())
 source("sim_rejection_rate.R")
 
 ### 4-dimensional (i.e. 3d Y)
@@ -41,9 +42,9 @@ for(Tlen in powerTs) {
     
     PowerAnalysisLists[[paste0("T",as.character(Tlen))]][[paste0("gamma", as.character(gamma))]] <- df_power
   }
-  
-  
 }
+
+saveRDS(PowerAnalysisLists, file = "DavidPowerAnalysis_AR1_4D.rds")
 
 
 
