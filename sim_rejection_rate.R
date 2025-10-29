@@ -148,8 +148,8 @@ sim_rej_rate <- function(Tlen, L, B,
     
     #store results in a dataframe with alpha, rejection rates and SEs
     rejection_rate_df <- data.frame(alpha = alphas, 
-                                    rate = as.numeric(rates), 
-                                    se = as.numeric(ses))
+                                    rate_nonparametric = as.numeric(rates), 
+                                    se_nonparametric = as.numeric(ses))
     
     estimates <- data.frame(S_hat = S_hats)
     covvars <- list(est = covvar_list)
