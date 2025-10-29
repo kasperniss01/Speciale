@@ -5,7 +5,9 @@ rm(list = ls())
 naming_lookup <- c("rate_parametric_plugin" = "rates_parametric_plugin",
                "rate_parametric" = "rates_parametric",
                "rate_nonparametric" = "rate",
-               "se_nonparametric" = "se")
+               "se_nonparametric" = "se",
+               "rate_oracle_plugin" = "rate_true",
+               "se_oracle_plugin" = "se_true")
 
 
 
