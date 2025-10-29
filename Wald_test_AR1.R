@@ -1,5 +1,9 @@
-### function to calculate the Wald statistic for the nulhypothsis (in the paramatric gaussian AR1 model)
+### function to calculate a Wald statistic for the nullhypothsis (in the parametric Gaussian AR1 model)
 Wald_test_AR1 <- function(data, alphas) {
+  # data is dataset
+  # alphas is multiple significance levels
+  
+  #returns a list of Wald statistic, p_values and df with reject or not
   
   theta_hat <- vars::Acoef(vars::VAR(data, p = 1))[[1]][1, -1]
   
@@ -18,8 +22,11 @@ Wald_test_AR1 <- function(data, alphas) {
 }
 
 
-
+### function to add rejection_rates based on a Wald test
 add_wald_test_to_sim_rej_rat_obj <- function(sim_rej_rat_obj) {
+  # sim_rej_rat_obj is an object of the form coming from sim_rejection_rate
+  
+  # returns rejection_rate df from sim_rej_rat_obj
   
   alphas <- sim_rej_rate_obj$rejection_rate_df$alpha
   
@@ -27,19 +34,13 @@ add_wald_test_to_sim_rej_rat_obj <- function(sim_rej_rat_obj) {
   pvals <- numeric(length(sim_rej_rate_obj$data))
   
   for(i in seq_along(sim_rej_rate_obj$data)) {
-    #browser()
-    
     data <- sim_rej_rate_obj$data[[i]]
     
     wald_test_result <- Wald_test_AR1(data, alphas)
     
     wald_rejections[, i] <- wald_test_result$reject$reject
-    pvals[i] <- wald_test_result$p_value
-    
-    
+    pvals[i] <- wald_test_result$p_value 
   }
-  
-  #browser()
   
   wald_rejections <- data.frame(alpha = alphas) %>% 
     mutate(
@@ -47,46 +48,8 @@ add_wald_test_to_sim_rej_rat_obj <- function(sim_rej_rat_obj) {
       se_wald = sqrt(rate_wald * (1 - rate_wald) / length(sim_rej_rate_obj$data))
     )
   
-  
   sim_rej_rate_obj$rejection_rate_df <- sim_rej_rate_obj$rejection_rate_df %>% 
     left_join(wald_rejections, by = "alpha")
   
   sim_rej_rate_obj
 }
-
-
-# df_T500_4D <- add_wald_test_to_sim_rej_rat_obj(df_T500_4D)
-# df_T500_4D$rejection_rate_df <- df_T500_4D$rejection_rate_df %>% rename(
-#   rate_parametric = rates_parametric,
-#   rate_parametric_plugin = rates_parametric_plugin,
-# )
-# saveRDS(df_T500_4D, file = "datasets/T500_4D.rds")
-# 
-# 
-# df_T2K_4D <- add_wald_test_to_sim_rej_rat_obj(df_T2K_4D)
-# df_T2K_4D$rejection_rate_df <- df_T2K_4D$rejection_rate_df %>% rename(
-#   rate_parametric = rates_parametric,
-#   rate_parametric_plugin = rates_parametric_plugin,
-# )
-# saveRDS(df_T2K_4D, file = "datasets/T2K_4D.rds")
-# 
-# df_T5K_4D <- add_wald_test_to_sim_rej_rat_obj(df_T5K_4D)
-# df_T5K_4D$rejection_rate_df <- df_T5K_4D$rejection_rate_df %>% rename(
-#   rate_parametric = rates_parametric,
-#   rate_parametric_plugin = rates_parametric_plugin,
-# )
-# saveRDS(df_T5K_4D, file = "datasets/T5K_4D.rds")
-# 
-# df_T10K_4D <- add_wald_test_to_sim_rej_rat_obj(df_T10K_4D)
-# df_T10K_4D$rejection_rate_df <- df_T10K_4D$rejection_rate_df %>% rename(
-#   rate_parametric = rates_parametric,
-#   rate_parametric_plugin = rates_parametric_plugin,
-# )
-# saveRDS(df_T10K_4D, file = "datasets/T10K_4D.rds")
-
-
-
-
-
-
-
