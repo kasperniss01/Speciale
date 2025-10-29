@@ -17,9 +17,9 @@ alternative_matrix <- function(gamma, d = 3, vec = rep(1, d), seed  = NULL) {
 }
 
 gammas <- seq(0,1,0.333)
-powerTs <- c(5000) #Kasper <- c(2000, 3000)
+powerTs <- c(2000, 3000)
 
-PowerAnalysisLists <- list()
+PowerAnalysisLists<- list()
 
 for(Tlen in powerTs) {
   PowerAnalysisLists[[paste0("T",as.character(Tlen))]] <- list()
@@ -42,8 +42,9 @@ for(Tlen in powerTs) {
     PowerAnalysisLists[[paste0("T",as.character(Tlen))]][[paste0("gamma", as.character(gamma))]] <- df_power
   }
   
-  
 }
+
+saveRDS(PowerAnalysisLists, file = "datasets/KasperPowerAnalysis_AR1_4D.rds")
 
 
 
