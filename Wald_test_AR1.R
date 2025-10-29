@@ -23,10 +23,12 @@ Wald_test_AR1 <- function(data, alphas) {
 
 
 ### function to add rejection_rates based on a Wald test
-add_wald_test_to_sim_rej_rat_obj <- function(sim_rej_rat_obj) {
+add_wald_test_to_sim_rej_rat_obj <- function(sim_rej_rate_obj) {
   # sim_rej_rat_obj is an object of the form coming from sim_rejection_rate
   
   # returns rejection_rate df from sim_rej_rat_obj
+  
+  #browser()
   
   alphas <- sim_rej_rate_obj$rejection_rate_df$alpha
   
