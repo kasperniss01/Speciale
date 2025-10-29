@@ -39,9 +39,9 @@ sim_rej_rate <- function(Tlen, L, B,
   
   remainders <- data.frame()
   
-  S_trues <- numeric(repetitions)
-  covvar_true_list <- list()
-  reject_true <- matrix(FALSE, nrow = K, ncol = repetitions,
+  S_oracle_plugins <- numeric(repetitions)
+  covvar_oracle_plugin_list <- list()
+  reject_oracle_plugin <- matrix(FALSE, nrow = K, ncol = repetitions,
                         dimnames = list(paste0("alpha=", alphas), NULL))
   
   S_hats <- numeric(repetitions)
@@ -125,15 +125,15 @@ sim_rej_rate <- function(Tlen, L, B,
     if (!is.null(remainder_true_ccfs$true_phi) && !is.null(remainder_true_ccfs$true_psi)) {
       remainders <- bind_rows(remainders, est$Remainders)
       
-      S_true <- est$S_true
-      S_trues[i] <- S_true
+      S_oracle_plugin <- est$S_true
+      S_oracle_plugins[i] <- S_oracle_plugin
       
-      covvar_est_true <- est$Covvar_Est_true
-      covvar_true_list[[i]] <- covvar_est_true
+      covvar_est_oracle_plugin <- est$Covvar_Est_true
+      covvar_oracle_plugin_list[[i]] <- covvar_est_oracle_plugin
     
-      draws_true <- sim_crit_draws(covvar_est_true)
-      crits_true <- crit_from_draws(draws_true, alphas)
-      reject_true[, i] <- (S_true > crits_true)
+      draws_oracle_plugin <- sim_crit_draws(covvar_est_oracle_plugin)
+      crits_oracle_plugin <- crit_from_draws(draws_oracle_plugin, alphas)
+      reject_oracle_plugin[, i] <- (S_oracle_plugin > crits_oracle_plugin)
     }
     
     #print to see how far in loop
@@ -164,9 +164,9 @@ sim_rej_rate <- function(Tlen, L, B,
       ses_parametric_plugin <- sqrt(rates_parametric_plugin * (1 - rates_parametric_plugin) / repetitions)
       
       rejection_rate_df <- rejection_rate_df %>% mutate(
-        rates_parametric = as.numeric(rates_parametric),
+        rate_parametric = as.numeric(rates_parametric),
         se_parametric = as.numeric(ses_parametric),
-        rates_parametric_plugin = as.numeric(rates_parametric_plugin),
+        rate_parametric_plugin = as.numeric(rates_parametric_plugin),
         se_parametric_plugin = as.numeric(ses_parametric_plugin)
       )
       
@@ -177,17 +177,17 @@ sim_rej_rate <- function(Tlen, L, B,
     
     if (!is.null(remainder_true_ccfs$true_phi) && !is.null(remainder_true_ccfs$true_psi)) {
       
-      rates_true <- rowMeans(reject_true)
-      ses_true <- sqrt(rates_true * (1 - rates_true) / repetitions)
+      rates_oracle_plugin <- rowMeans(reject_oracle_plugin)
+      ses_oracle_plugin <- sqrt(rates_oracle_plugin * (1 - rates_oracle_plugin) / repetitions)
       
-      # append true stuff
+      # append oracle_plugin stuff
       rejection_rate_df <- rejection_rate_df %>% mutate(
-        rate_true = as.numeric(rates_true),
-        se_true = as.numeric(ses_true))
+        rate_oracle_plugin = as.numeric(rates_oracle_plugin),
+        se_oracle_plugin = as.numeric(ses_oracle_plugin))
       
-      estimates <- estimates %>% mutate(S_true = S_trues)
+      estimates <- estimates %>% mutate(S_oracle_plugin = S_oracle_plugins)
       
-      covvars <- append(covvars, list(true = covvar_true_list))
+      covvars <- append(covvars, list(true = covvar_oracle_plugin_list))
     }
     
     
