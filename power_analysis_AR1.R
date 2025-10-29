@@ -96,4 +96,9 @@ df_power <- sim_rej_rate(2000, L = 10, B = 10,
 
 
 PowerAnalysis_AR1_4D$T2000$gamma0.03 <- df_power
+saveRDS(PowerAnalysis_AR1_4D, file = "datasets/PowerAnalysis_AR1_4D.rds")
+
+
+
+
 
