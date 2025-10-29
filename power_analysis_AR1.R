@@ -1,3 +1,4 @@
+rm(list = ls())
 source("sim_rejection_rate.R")
 
 ### 4-dimensional (i.e. 3d Y)
