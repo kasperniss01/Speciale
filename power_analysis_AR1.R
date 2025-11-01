@@ -18,8 +18,8 @@ alternative_matrix <- function(gamma, d = 3, vec = rep(1, d), seed  = NULL) {
   A  
 }
 
-gammas <- seq(0,1,0.333)
-powerTs <- c(2000, 3000)
+# gammas <- seq(0,1,0.333)
+# powerTs <- c(2000, 3000)
 
 # PowerAnalysisLists<- list()
 # 
@@ -141,51 +141,72 @@ PowerAnalysis_AR1_4D <- readRDS("datasets/PowerAnalysis_AR1_4D.rds")
 
 
 # PLOTTING THE POWER ANALYSIS RESULTS ON T = 2000, gamma = 0.003
-
-PowerAnalysis_AR1_4D$T2000$gamma0.03$rejection_rate_df %>%
-  pivot_longer(cols = starts_with("rate"), names_to = "method", values_to = "rejection_rate") %>%
-  pivot_longer(cols = starts_with("se"), names_to = "method_se", values_to = "se") %>%
-  filter( str_remove(method, "rate") == str_remove(method_se, "se")) %>% 
-  mutate(method = str_remove(method, "rate_")) %>%
-  filter(method %in% c("parametric_plugin", "wald", "nonparametric")) %>% 
-  dplyr::select(-method_se) %>%
-  bind_rows(
-    PowerAnalysis_AR1_4D$T2000$gamma0$rejection_rate_df %>% 
-      pivot_longer(cols = starts_with("rate"), names_to = "method", values_to = "rejection_rate") %>%
-      pivot_longer(cols = starts_with("se"), names_to = "method_se", values_to = "se") %>% 
-      filter( str_remove(method, "rate") == str_remove(method_se, "se")) %>% 
-      filter(method == "rate_nonparametric") %>% 
-      mutate(method = "nonparametric under H0") %>% 
-      dplyr::select(-method_se)
-  ) %>% 
+plot_power <- function(data, gamma_value = NULL, null_hypothesis_data = NULL) {
   
-  ggplot(aes(x = alpha, y = rejection_rate, color = method)) +
-  geom_line() +
-  geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "gray") +
-  geom_ribbon(aes(ymin = rejection_rate - 1.96*se,
-                  ymax = rejection_rate + 1.96*se,
-                  fill = method), alpha = 0.2, color = NA) +
-  theme_minimal() +
-  labs(title = "Power Analysis in 4D AR(1) Model",
-       subtitle = "Alternative with gamma = 0.03 in the first coordinate",
-       y = "Rejection Rate",
-       x = "Significance Level (alpha)",
-       color = "Method",
-       fill = "Method")
+  lab_args <- c(
+    title = "Power Analysis in 4D AR(1) Model",
+    y = "Rejection Rate",
+    x = "Significance Level (alpha)",
+    color = "Method",
+    fill = "Method"
+  )
+  
+  if(!is.null(gamma_value))  lab_args <- append(lab_args, c(subtitle = "Alternative with gamma = 0.03"))
+  
+  data <- data %>%
+    pivot_longer(cols = starts_with("rate"), names_to = "method", values_to = "rejection_rate") %>%
+    pivot_longer(cols = starts_with("se"), names_to = "method_se", values_to = "se") %>%
+    filter( str_remove(method, "rate") == str_remove(method_se, "se")) %>% 
+    mutate(method = str_remove(method, "rate_")) %>%
+    filter(method %in% c("parametric_plugin", "wald", "nonparametric", "oracle_plugin")) %>% 
+    dplyr::select(-method_se)
+  
+  
+  if(!is.null(null_hypothesis_data)) {
+    
+    data <- data %>% 
+      bind_rows(
+        null_hypothesis_data %>% 
+          pivot_longer(cols = starts_with("rate"), names_to = "method", values_to = "rejection_rate") %>%
+          pivot_longer(cols = starts_with("se"), names_to = "method_se", values_to = "se") %>% 
+          filter( str_remove(method, "rate") == str_remove(method_se, "se")) %>% 
+          filter(method == "rate_nonparametric") %>% 
+          mutate(method = "nonparametric under H0") %>% 
+          dplyr::select(-method_se)
+      )
+    
+  }
+  
+  
+  
+    data %>% 
+    ggplot(aes(x = alpha, y = rejection_rate, color = method)) +
+    geom_line() +
+    geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "gray") +
+    geom_ribbon(aes(ymin = rejection_rate - 1.96*se,
+                    ymax = rejection_rate + 1.96*se,
+                    fill = method), alpha = 0.2, color = NA) +
+    theme_minimal() +
+    labs(lab_args)
+  
+}
+
+# PowerAnalysis_AR1_4D$T2000$gamma0.03$rejection_rate_df %>%
+#   plot_power(gamma_value = 0.03,
+#              null_hypothesis_data = PowerAnalysis_AR1_4D$T2000$gamma0$rejection_rate_df)
 
 
 
-
-gammas <- seq(0.05,0.2,0.05)
+gammas <- 0.15 #seq(0.05,0.2,0.05)
 powerTs <- c(2000)
-PowerAnalysisLists_smallGamma<- list()
+PowerAnalysisLists_smallGammafix <- list()
 for(Tlen in powerTs) {
-  PowerAnalysisLists_smallGamma[[paste0("T",as.character(Tlen))]] <- list()
-  
-  
+  PowerAnalysisLists_smallGammafix[[paste0("T",as.character(Tlen))]] <- list()
+
+
   for(gamma in gammas) {
     A_alt <- alternative_matrix(gamma = gamma, d = 3, vec = c(1,1,1), seed = 100)
-    
+
     message("T: ", Tlen, " | gamma: ", gamma)
     df_power <- sim_rej_rate(Tlen, L = 10, B = 10, A = A_alt, alphas = seq(0.01, 1, 0.01),
                             parametric = TRUE,
@@ -194,19 +215,187 @@ for(Tlen in powerTs) {
                               true_psi = function(x, u, A, t) {
                                 char_func_cond_Y_given_X_highdim_mat(A, t, x, u)
                               }
-                            ),
+                            )
     )
-    
-    PowerAnalysisLists_smallGamma[[paste0("T",as.character(Tlen))]][[paste0("gamma", as.character(gamma))]] <- df_power
+
+    PowerAnalysisLists_smallGammafix[[paste0("T",as.character(Tlen))]][[paste0("gamma", as.character(gamma))]] <- df_power
   }
-  
+
 }
 
-
-PowerAnalysisLists_smallGamma$T2000$gamma0.05$rejection_rate_df
-
+PowerAnalysisLists_smallGammafix$T2000$gamma0.15 <- add_wald_test_to_sim_rej_rat_obj(PowerAnalysisLists_smallGammafix$T2000$gamma0.15)
 
 
+saveRDS(PowerAnalysisLists_smallGammafix, file = "datasets/PowerAnalysis_AR1_4D_smallGamma.rds")
 
 
 
+
+
+
+PowerAnalysisLists_smallGammafix$T2000$gamma0.15$rejection_rate_df %>% plot_power(gamma_value = 0.15,
+             null_hypothesis_data = PowerAnalysis_AR1_4D$T2000$gamma0$rejection_rate_df)
+
+
+# add_wald_test_to_sim_rej_rat_obj(PowerAnalysisLists_smallGamma$T2000$gamma0.05)$rejection_rate_df %>% 
+#   plot_power(gamma_value = 0.05,
+#              null_hypothesis_data = PowerAnalysis_AR1_4D$T2000$gamma0$rejection_rate_df)
+# 
+# 
+# 
+# 
+# add_wald_test_to_sim_rej_rat_obj(PowerAnalysisLists_smallGamma$T2000$gamma0.15)$rejection_rate_df %>% 
+#   plot_power(gamma_value = 0.05,
+#              null_hypothesis_data = PowerAnalysis_AR1_4D$T2000$gamma0$rejection_rate_df)
+# 
+# 
+# 
+# 
+# add_wald_test_to_sim_rej_rat_obj(PowerAnalysisLists_smallGamma$T2000$gamma0.2)$rejection_rate_df %>% 
+#   plot_power(gamma_value = 0.05,
+#              null_hypothesis_data = PowerAnalysis_AR1_4D$T2000$gamma0$rejection_rate_df)
+# 
+# 
+# PowerAnalysis_AR1_4D$T2000$gamma0.333$rejection_rate_df %>% 
+#   plot_power(gamma_value = 0.333,
+#              null_hypothesis_data = PowerAnalysis_AR1_4D$T2000$gamma0$rejection_rate_df)
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# add_wald_test_to_sim_rej_rat_obj(PowerAnalysisLists_smallGamma$T2000$gamma0.05)$rejection_rate_df %>%
+#   pivot_longer(cols = starts_with("rate"), names_to = "method", values_to = "rejection_rate") %>%
+#   pivot_longer(cols = starts_with("se"), names_to = "method_se", values_to = "se") %>%
+#   filter( str_remove(method, "rate") == str_remove(method_se, "se")) %>% 
+#   mutate(method = str_remove(method, "rate_")) %>%
+#   filter(method %in% c("parametric_plugin", "wald", "nonparametric")) %>% 
+#   dplyr::select(-method_se) %>%
+#   bind_rows(
+#     PowerAnalysis_AR1_4D$T2000$gamma0$rejection_rate_df %>% 
+#       pivot_longer(cols = starts_with("rate"), names_to = "method", values_to = "rejection_rate") %>%
+#       pivot_longer(cols = starts_with("se"), names_to = "method_se", values_to = "se") %>% 
+#       filter( str_remove(method, "rate") == str_remove(method_se, "se")) %>% 
+#       filter(method == "rate_nonparametric") %>% 
+#       mutate(method = "nonparametric under H0") %>% 
+#       dplyr::select(-method_se)
+#   ) %>% 
+#   
+#   ggplot(aes(x = alpha, y = rejection_rate, color = method)) +
+#   geom_line() +
+#   geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "gray") +
+#   geom_ribbon(aes(ymin = rejection_rate - 1.96*se,
+#                   ymax = rejection_rate + 1.96*se,
+#                   fill = method), alpha = 0.2, color = NA) +
+#   theme_minimal() +
+#   labs(title = "Power Analysis in 4D AR(1) Model",
+#        subtitle = "Alternative with gamma = 0.05 in the first coordinate",
+#        y = "Rejection Rate",
+#        x = "Significance Level (alpha)",
+#        color = "Method",
+#        fill = "Method")
+# 
+# 
+# add_wald_test_to_sim_rej_rat_obj(PowerAnalysisLists_smallGamma$T2000$gamma0.1)$rejection_rate_df %>%
+#   pivot_longer(cols = starts_with("rate"), names_to = "method", values_to = "rejection_rate") %>%
+#   pivot_longer(cols = starts_with("se"), names_to = "method_se", values_to = "se") %>%
+#   filter( str_remove(method, "rate") == str_remove(method_se, "se")) %>% 
+#   mutate(method = str_remove(method, "rate_")) %>%
+#   filter(method %in% c("parametric_plugin", "wald", "nonparametric")) %>% 
+#   dplyr::select(-method_se) %>%
+#   bind_rows(
+#     PowerAnalysis_AR1_4D$T2000$gamma0$rejection_rate_df %>% 
+#       pivot_longer(cols = starts_with("rate"), names_to = "method", values_to = "rejection_rate") %>%
+#       pivot_longer(cols = starts_with("se"), names_to = "method_se", values_to = "se") %>% 
+#       filter( str_remove(method, "rate") == str_remove(method_se, "se")) %>% 
+#       filter(method == "rate_nonparametric") %>% 
+#       mutate(method = "nonparametric under H0") %>% 
+#       dplyr::select(-method_se)
+#   ) %>% 
+#   
+#   ggplot(aes(x = alpha, y = rejection_rate, color = method)) +
+#   geom_line() +
+#   geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "gray") +
+#   geom_ribbon(aes(ymin = rejection_rate - 1.96*se,
+#                   ymax = rejection_rate + 1.96*se,
+#                   fill = method), alpha = 0.2, color = NA) +
+#   theme_minimal() +
+#   labs(title = "Power Analysis in 4D AR(1) Model",
+#        subtitle = "Alternative with gamma = 0.1 in the first coordinate",
+#        y = "Rejection Rate",
+#        x = "Significance Level (alpha)",
+#        color = "Method",
+#        fill = "Method")
+# 
+# add_wald_test_to_sim_rej_rat_obj(PowerAnalysisLists_smallGamma$T2000$gamma0.15)$rejection_rate_df %>%
+#   pivot_longer(cols = starts_with("rate"), names_to = "method", values_to = "rejection_rate") %>%
+#   pivot_longer(cols = starts_with("se"), names_to = "method_se", values_to = "se") %>%
+#   filter( str_remove(method, "rate") == str_remove(method_se, "se")) %>% 
+#   mutate(method = str_remove(method, "rate_")) %>%
+#   filter(method %in% c("parametric_plugin", "wald", "nonparametric")) %>% 
+#   dplyr::select(-method_se) %>%
+#   bind_rows(
+#     PowerAnalysis_AR1_4D$T2000$gamma0$rejection_rate_df %>% 
+#       pivot_longer(cols = starts_with("rate"), names_to = "method", values_to = "rejection_rate") %>%
+#       pivot_longer(cols = starts_with("se"), names_to = "method_se", values_to = "se") %>% 
+#       filter( str_remove(method, "rate") == str_remove(method_se, "se")) %>% 
+#       filter(method == "rate_nonparametric") %>% 
+#       mutate(method = "nonparametric under H0") %>% 
+#       dplyr::select(-method_se)
+#   ) %>% 
+#   
+#   ggplot(aes(x = alpha, y = rejection_rate, color = method)) +
+#   geom_line() +
+#   geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "gray") +
+#   geom_ribbon(aes(ymin = rejection_rate - 1.96*se,
+#                   ymax = rejection_rate + 1.96*se,
+#                   fill = method), alpha = 0.2, color = NA) +
+#   theme_minimal() +
+#   labs(title = "Power Analysis in 4D AR(1) Model",
+#        subtitle = "Alternative with gamma = 0.15 in the first coordinate",
+#        y = "Rejection Rate",
+#        x = "Significance Level (alpha)",
+#        color = "Method",
+#        fill = "Method")
+# 
+# 
+# add_wald_test_to_sim_rej_rat_obj(PowerAnalysisLists_smallGamma$T2000$gamma0.2)$rejection_rate_df %>%
+#   pivot_longer(cols = starts_with("rate"), names_to = "method", values_to = "rejection_rate") %>%
+#   pivot_longer(cols = starts_with("se"), names_to = "method_se", values_to = "se") %>%
+#   filter( str_remove(method, "rate") == str_remove(method_se, "se")) %>% 
+#   mutate(method = str_remove(method, "rate_")) %>%
+#   filter(method %in% c("parametric_plugin", "wald", "nonparametric")) %>% 
+#   dplyr::select(-method_se) %>%
+#   bind_rows(
+#     PowerAnalysis_AR1_4D$T2000$gamma0$rejection_rate_df %>% 
+#       pivot_longer(cols = starts_with("rate"), names_to = "method", values_to = "rejection_rate") %>%
+#       pivot_longer(cols = starts_with("se"), names_to = "method_se", values_to = "se") %>% 
+#       filter( str_remove(method, "rate") == str_remove(method_se, "se")) %>% 
+#       filter(method == "rate_nonparametric") %>% 
+#       mutate(method = "nonparametric under H0") %>% 
+#       dplyr::select(-method_se)
+#   ) %>% 
+#   
+#   ggplot(aes(x = alpha, y = rejection_rate, color = method)) +
+#   geom_line() +
+#   geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "gray") +
+#   geom_ribbon(aes(ymin = rejection_rate - 1.96*se,
+#                   ymax = rejection_rate + 1.96*se,
+#                   fill = method), alpha = 0.2, color = NA) +
+#   theme_minimal() +
+#   labs(title = "Power Analysis in 4D AR(1) Model",
+#        subtitle = "Alternative with gamma = 0.2 in the first coordinate",
+#        y = "Rejection Rate",
+#        x = "Significance Level (alpha)",
+#        color = "Method",
+#        fill = "Method")
+# 
+# 
+# 
+# 
