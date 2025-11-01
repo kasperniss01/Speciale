@@ -39,7 +39,7 @@ estimate_stat <- function(data, L, B,
   
   p <- log(n * L)
   
-  Gamma_hat <- R1 <- R2 <- R3 <- true_Gamma <- complex(length.out = B)
+  Gamma_hat <- true_Gamma <- Gamma_parametric_plugin <- R1 <- R2 <- R3 <- complex(length.out = B)
   
   Covvar_Est <- list()
   Covvar_Est_true <- list()
@@ -140,6 +140,8 @@ estimate_stat <- function(data, L, B,
     
     if(parametric_plugin_AR1) {
       
+      #browser()
+      
       fit <- vars::VAR(data)
       A_parametric_plugin <- Acoef(fit)[[1]]
       
@@ -157,7 +159,7 @@ estimate_stat <- function(data, L, B,
       
       lambda_parametric_plugin <- resX_parametric_plugin * resY_parametric_plugin
       
-      Gamma_parametric_plugin <- Gamma_hat + colSums(lambda_parametric_plugin - resX * resY)
+      Gamma_parametric_plugin <- Gamma_parametric_plugin + colSums(lambda_parametric_plugin)
       
       
       Covvar_Est_parametric_plugin[[l]] <- crossprod(cbind(Re(lambda_parametric_plugin), Im(lambda_parametric_plugin)))  # 2B x 2B
