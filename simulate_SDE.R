@@ -1,22 +1,21 @@
-set.seed(123)
-# dXt = (6-3*Xt)*dt + 2*sqrt(Xt)*dWt
-d_x <- expression( 6-3*x )
-s_x <- expression( 2*sqrt(x) )
+### functionality to simulate solution to SDE of the form
 
-sde::sde.sim(X0=2,drift=d_x, sigma=s_x, T = 10, N = 1000) -> X
-plot(X,main="Cox-Ingersoll-Ross")
+# dZ_t = a(Z_t, t)dt + b(Z_t, t)dW_t
 
-d_z <- expression(6-3*z)
-s_z <- expression(2*sqrt(z))
+#with user specific drift, a, and diffusion, b.
+###
 
-d_z_mat <- function(z) 
+source("CIR_drift_diffusion.R")
 
 simulate_sde <- function(drift, diffusion, Z0, Tlen, N) {
   #drift and diffusion should be lists with function and hypothesis
-  #Z0 is initial value, vector of length d + 1
+  #Z0 is initial value, vector of length d
+  #Tlen is length of chain
+  #N is number of grid points 
+    # higher N gives better precision
   
+  #returns a timeseries object with the simulated solution
   
-  #todo: implement piece of code to check if we are under the hypothesis or not
   
   hypothesis_drift <- hypothesis_diffusion <- NULL 
   
@@ -53,10 +52,10 @@ simulate_sde <- function(drift, diffusion, Z0, Tlen, N) {
   # times <- seq(0, Tlen, length.out = N + 1)
   times <- seq(0, Tlen, by = delta_t)
   
-  out <- matrix(nrow = N + 1, ncol = d)
+  out <- matrix(nrow = N, ncol = d)
   out[1, ] <- Z0
   
-  for(i in 1:N) {
+  for(i in 1:(N - 1)) {
     z <- out[i, ] #previous Z 
     t <- times[i] #previous time
     
@@ -77,42 +76,11 @@ simulate_sde <- function(drift, diffusion, Z0, Tlen, N) {
   for(i in 1:Y_dim) Y_name[i] <- paste0("Y", i)
   names <- c("X", Y_name)
   
-  ts_obj <- ts(out, start = 0, deltat = delta_t, names = names) #create time series object
+  #create time series object for whole path or only integer path
+  ts_obj <- ts(out, start = 0, deltat = delta_t, names = names) 
+  ts_obj_integers <- ts(ts_obj[cycle(ts_obj) == 1, ], start = start(ts_obj)[1], frequency = 1)
   
-  return(ts_obj)
-}
-
-
-make_CIR_drift <- function(theta1, theta2) {
-  #theta1 is dx1 vector
-  #theta2 is dxd matrix
-  
-  if(all(theta2[1, -1] == 0)) {
-    cat("simulating under the hypothesis \n")
-    hypothesis_drift = TRUE
-  }
-  
-  drift_fun <- function(z, t) as.numeric(theta1 - theta2 %*% z)
-  
-  out <- list(drift = drift_fun, hypothesis_drift = hypothesis_drift)
-  
-  return(out)
-}
-
-make_CIR_diffusion <- function(theta3) {
-  #theta3 is dxd matrix
-  #returns dxd matrix matrix diag(sqrt(z)) %*% theta3
-  
-  d <- nrow(theta3)
-  
-  if(all(theta3[1, -1] == 0)) {
-    cat("simulating under the hypothesis \n")
-    hypothesis_diffusion = TRUE
-  }
-  
-  diffusion_fun <- function(z, t) diag(sqrt(z), nrow = d) %*% theta3
-  
-  out <- list(diffusion = diffusion_fun, hypothesis_diffusion = hypothesis_diffusion)
+  out <- list(whole_path = ts_obj, discretized_path = ts_obj_integers)
   
   return(out)
 }
@@ -130,4 +98,20 @@ diffusion_z <- make_CIR_diffusion(theta3)
 my_X <- simulate_sde(drift_z, diffusion_z, c(2, 1.3, 0.5, 1), 10, 1000)
 
 
-plot(my_X)
+plot(my_X$whole_path)
+plot(my_X$discretized_path)
+
+
+### using SDE package ###  
+# set.seed(123)
+# # dXt = (6-3*Xt)*dt + 2*sqrt(Xt)*dWt
+# d_x <- expression( 6-3*x )
+# s_x <- expression( 2*sqrt(x) )
+# 
+# sde::sde.sim(X0=2,drift=d_x, sigma=s_x, T = 10, N = 1000) -> X
+# plot(X,main="Cox-Ingersoll-Ross")
+# 
+# d_z <- expression(6-3*z)
+# s_z <- expression(2*sqrt(z))
+# 
+# d_z_mat <- function(z) 

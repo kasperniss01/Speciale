@@ -23,6 +23,7 @@ simulate_AR_process <- function(Tlen,
   ### Todo: implement such that innovations might be non-linear
   ### make it possible for Y to be multidimensional
   ### perform input check on dimensions for A and Sigma
+  ### print if we simulate under the null
   
   Z <- matrix(nrow = Tlen, ncol = d + 1) 
   Z[1, ] <- Z0
