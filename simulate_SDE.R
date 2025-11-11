@@ -9,38 +9,67 @@ plot(X,main="Cox-Ingersoll-Ross")
 d_z <- expression(6-3*z)
 s_z <- expression(2*sqrt(z))
 
+d_z_mat <- function(z) 
+
 simulate_sde <- function(drift, diffusion, Z0, Tlen, N) {
-  #drift and diffusion should be function of z and t - outputs vector of length(d + 1)
+  #drift and diffusion should be lists with function and hypothesis
   #Z0 is initial value, vector of length d + 1
   
-  ##todo: explain how drift and diffusion should be chosen
   
-  drift_fun <- function(z, t) eval(drift)
-  diffusion_fun <- function(z, t) eval(diffusion)
+  #todo: implement piece of code to check if we are under the hypothesis or not
   
+  hypothesis_drift <- hypothesis_diffusion <- NULL 
+  
+  #all sorts of checks, don't know if necessary...
+  #check initial value
+  if (any(Z0) < 0) stop("use positive initialization")
+  # browser()
+  
+  #see of drift and diffusion are lists and extract stuff
+  if(is.list(drift)) {
+    drift_fun <- drift$drift
+    hypothesis_drift <- drift$hypothesis_drift
+  }
+  else cat("use make_CIR_drift to create drift function")
+  
+  if(is.list(diffusion)) {
+    diffusion_fun <- diffusion$diffusion
+    hypothesis_diffusion <- diffusion$hypothesis_diffusion
+  }
+  else cat("use make_CIR_diffusion to create diffusion function")
+  
+  if (is.null(hypothesis_drift) | is.null(hypothesis_diffusion)) {
+    cat("can't check if hypothesis is true")
+  }
+  else {
+    if(hypothesis_drift & hypothesis_diffusion) cat("simulating under the hypothesis")
+  }
+
   d <- length(Z0) #dimension of the process
   Y_dim <- d - 1
   
   delta_t <- Tlen / N
-  normals <- matrix(rnorm(N * d, 0, sqrt(delta_t)), nrow = N, ncol = d)
-  times <- seq(0, Tlen, length.out = N + 1)
+  normals <- matrix(rnorm(N * d, 0, sqrt(delta_t)), nrow = N, ncol = d) #scale either here or in loop
+  # times <- seq(0, Tlen, length.out = N + 1)
+  times <- seq(0, Tlen, by = delta_t)
   
   out <- matrix(nrow = N + 1, ncol = d)
   out[1, ] <- Z0
   
-    # browser()
   for(i in 1:N) {
-    z <- out[i, ] #previous Z
+    z <- out[i, ] #previous Z 
     t <- times[i] #previous time
     
-    drift_vec <- drift_fun(z, t)
-    diffusion_val <- diffusion_fun(z, t)
+    a <- drift_fun(z, t) #drift
+    b_val <- diffusion_fun(z, t) #diffusion_value
     
-    if (is.matrix(diffusion_val)) diffusion_mat <- diffusion_val
-    else diffusion_mat <- diag(diffusion_val)
+    #diffusion
+    if (is.matrix(b_val)) b <- b_val
+    else b <- diag(b_val) 
     
-    out[i + 1, ] <- pmax(out[i, ] + 
-      drift_vec * delta_t + as.vector(diffusion_mat %*% normals[i, ]), 0) #make sure to get positive values 
+    out[i + 1, ] <- pmax(
+      out[i, ] + a * delta_t + as.vector(b %*% normals[i, ]), 0
+      ) #make sure to get positive values 
     
   }
   
@@ -48,8 +77,57 @@ simulate_sde <- function(drift, diffusion, Z0, Tlen, N) {
   for(i in 1:Y_dim) Y_name[i] <- paste0("Y", i)
   names <- c("X", Y_name)
   
-  return(ts(out, start = 0, deltat = delta_t, names = names))
+  ts_obj <- ts(out, start = 0, deltat = delta_t, names = names) #create time series object
+  
+  return(ts_obj)
 }
 
-my_X <- simulate_sde(d_z, s_z, c(2,2, 10, 0.5, 1), 10, 1000)
+
+make_CIR_drift <- function(theta1, theta2) {
+  #theta1 is dx1 vector
+  #theta2 is dxd matrix
+  
+  if(all(theta2[1, -1] == 0)) {
+    cat("simulating under the hypothesis \n")
+    hypothesis_drift = TRUE
+  }
+  
+  drift_fun <- function(z, t) as.numeric(theta1 - theta2 %*% z)
+  
+  out <- list(drift = drift_fun, hypothesis_drift = hypothesis_drift)
+  
+  return(out)
+}
+
+make_CIR_diffusion <- function(theta3) {
+  #theta3 is dxd matrix
+  #returns dxd matrix matrix diag(sqrt(z)) %*% theta3
+  
+  d <- nrow(theta3)
+  
+  if(all(theta3[1, -1] == 0)) {
+    cat("simulating under the hypothesis \n")
+    hypothesis_diffusion = TRUE
+  }
+  
+  diffusion_fun <- function(z, t) diag(sqrt(z), nrow = d) %*% theta3
+  
+  out <- list(diffusion = diffusion_fun, hypothesis_diffusion = hypothesis_diffusion)
+  
+  return(out)
+}
+
+#testing
+d <- 4
+theta1 <- c(0.6, rep(0.4, d - 1))
+theta2  <- diag(c(1.2, rep(1.0, d - 1)))
+theta2[1, -1] <- 0
+theta3 <- diag(d) * 0.5
+
+drift_z <- make_CIR_drift(theta1, theta2)
+diffusion_z <- make_CIR_diffusion(theta3)
+
+my_X <- simulate_sde(drift_z, diffusion_z, c(2, 1.3, 0.5, 1), 10, 1000)
+
+
 plot(my_X)
