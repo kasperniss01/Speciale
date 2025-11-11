@@ -95,7 +95,7 @@ theta3 <- diag(d) * 0.5
 drift_z <- make_CIR_drift(theta1, theta2)
 diffusion_z <- make_CIR_diffusion(theta3)
 
-my_X <- simulate_sde(drift_z, diffusion_z, c(2, 1.3, 0.5, 1), 10, 1000)
+my_X <- simulate_sde(drift_z, diffusion_z, runif(4), 10, 1000)
 
 
 plot(my_X$whole_path)
