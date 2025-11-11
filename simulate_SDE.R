@@ -7,41 +7,45 @@
 
 source("CIR_drift_diffusion.R")
 
-simulate_sde <- function(drift, diffusion, Z0, Tlen, N) {
+simulate_sde <- function(Tlen, drift, diffusion, Z0, N = NULL, 
+                         verbose = FALSE) {
   #drift and diffusion should be lists with function and hypothesis
   #Z0 is initial value, vector of length d
   #Tlen is length of chain
   #N is number of grid points 
     # higher N gives better precision
+    # defaults 10 * Tlen
   
   #returns a timeseries object with the simulated solution
   
+  if (is.null(N)) N <- Tlen * 10
+  if (N < Tlen) stop("N must be bigger than Tlen")
   
   hypothesis_drift <- hypothesis_diffusion <- NULL 
   
   #all sorts of checks, don't know if necessary...
   #check initial value
-  if (any(Z0) < 0) stop("use positive initialization")
+  if (any(Z0 < 0)) stop("use positive initialization")
   # browser()
   
   #see of drift and diffusion are lists and extract stuff
   if(is.list(drift)) {
     drift_fun <- drift$drift
     hypothesis_drift <- drift$hypothesis_drift
-  }
-  else cat("use make_CIR_drift to create drift function")
+  } 
+  else stop("use make_CIR_drift to create drift function")
   
   if(is.list(diffusion)) {
     diffusion_fun <- diffusion$diffusion
     hypothesis_diffusion <- diffusion$hypothesis_diffusion
   }
-  else cat("use make_CIR_diffusion to create diffusion function")
+  else stop("use make_CIR_diffusion to create diffusion function")
   
-  if (is.null(hypothesis_drift) | is.null(hypothesis_diffusion)) {
+  if (verbose & (is.null(hypothesis_drift) | is.null(hypothesis_diffusion))) {
     cat("can't check if hypothesis is true")
   }
   else {
-    if(hypothesis_drift & hypothesis_diffusion) cat("simulating under the hypothesis")
+    if(verbose & hypothesis_drift & hypothesis_diffusion) cat("simulating under the hypothesis")
   }
 
   d <- length(Z0) #dimension of the process
@@ -95,7 +99,7 @@ theta3 <- diag(d) * 0.5
 drift_z <- make_CIR_drift(theta1, theta2)
 diffusion_z <- make_CIR_diffusion(theta3)
 
-my_X <- simulate_sde(drift_z, diffusion_z, runif(4), 10, 1000)
+my_X <- simulate_sde(Tlen = 100, drift_z, diffusion_z, runif(4))
 
 
 plot(my_X$whole_path)

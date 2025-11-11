@@ -4,9 +4,10 @@ make_CIR_drift <- function(theta1, theta2) {
   #theta2 is dxd matrix
   
   if(all(theta2[1, -1] == 0)) {
-    cat("simulating under the hypothesis \n")
+    # cat("simulating under the hypothesis \n")
     hypothesis_drift = TRUE
   }
+  else hypothesis_drift = FALSE
   
   drift_fun <- function(z, t) as.numeric(theta1 - theta2 %*% z)
   
@@ -22,9 +23,10 @@ make_CIR_diffusion <- function(theta3) {
   d <- nrow(theta3)
   
   if(all(theta3[1, -1] == 0)) {
-    cat("simulating under the hypothesis \n")
+    # cat("simulating under the hypothesis \n")
     hypothesis_diffusion = TRUE
   }
+  else hypothesis_diffusion = FALSE
   
   diffusion_fun <- function(z, t) diag(sqrt(z), nrow = d) %*% theta3
   
