@@ -30,6 +30,8 @@ estimate_stat <- function(data, L, B,
                           ) {
   #convert input data to a data.frame
   #allows for multiple input types, in particular data of type ts - time-series
+  
+  # browser()
   if(is.data.frame(data)) data <- data 
   else data <- as.data.frame(data)
   
@@ -241,7 +243,7 @@ estimate_stat <- function(data, L, B,
 # small_data <- simulate_AR_process(10, d = 3, A = matrix(c(0.1, rep(0, 3), rep(0.1, 12)), nrow = 4, byrow = T))
 # estimate_stat(small_data, 5, 2)
 
-estimate_stat(my_X$discretized_path, 2, 2)
+# estimate_stat(my_X$discretized_path, 2, 2)
 
 
 

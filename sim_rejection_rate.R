@@ -8,6 +8,8 @@ source("estimate_test.R") #this is needed
 source("sim_crit_value.R") #this is needed
 source("oracle_statistic.R") #don't think this is needed
 source("conditional_distributions.R") #this is needed
+source("simulate_SDE.R")
+source("CIR_drift_diffusion.R")
 
 library(vars)
 
@@ -17,20 +19,52 @@ library(vars)
 
 #only for AR1 process, consider changing data-generating process to be argument so it works in general
 sim_rej_rate <- function(Tlen, L, B,
-                         A_matrix, 
+                         DGP = c("AR1", "CIR"),
+                         parameters = list(), 
+                         # A_matrix, 
                          alphas,
                          repetitions = 500,
                          remainder_true_ccfs = list(true_phi = NULL, true_psi = NULL), 
                          parametric = FALSE, 
-                         verbose = TRUE) {
+                         verbose = FALSE) {
+
+  # browser()
+  
+  DGP <- match.arg(DGP)
   
   # browser()
   # true_phi <- function(x, mu) remainder_true_ccfs$true_phi(x, mu, A)
   # true_psi <- function(x, mu, t) remainder_true_ccfs$true_psi(x, mu, A, t)
   # these are seemingly not used?
   
+  if (DGP == "AR1") {
+    if (is.null(parameters$A_matrix)) stop("Must provide A_matrix for AR1")
+    else A_matrix = parameters$A_matrix
+    
+    d <- ncol(A_matrix) - 1
+  }
   
-  d <- ncol(A_matrix) - 1
+  if (DGP == "CIR") {
+    if (any(is.null(parameters$theta))) stop("Must provide theta1, theta2 and theta3 for CIR")
+    else {
+      theta <- parameters$theta
+      theta1 = theta$theta1
+      theta2 = theta$theta2
+      theta3 = theta$theta3
+    }
+   
+    #create CIR functions based on those parameters
+    drift <- make_CIR_drift(theta1, theta2)
+    diffusion <- make_CIR_diffusion(theta3)
+    
+    d <- ncol(theta3) - 1
+    
+    N <- parameters$N
+    
+  }
+  
+  
+  # d <- ncol(A_matrix) - 1
   
   mu <- matrix(rnorm(B), ncol = 1)
   nu <- matrix(rnorm(B * d), ncol = d)
@@ -63,7 +97,16 @@ sim_rej_rate <- function(Tlen, L, B,
   
   
   for (i in seq_len(repetitions)) {
-    data <- simulate_AR_process(Tlen, A_matrix, d = d)
+    if (DGP == "AR1") data <- simulate_AR_process(Tlen, A_matrix, d = d, 
+                                                  verbose = verbose)
+    if (DGP == "CIR") {
+      Z0 <- rep(1, d + 1)
+      time_series <- simulate_sde(Tlen = Tlen, drift = drift, diffusion = diffusion, Z0 = Z0, N = N,
+                                  verbose = verbose)
+      data <- time_series$discretized_path #choose path corresponding to integer values
+      }
+    
+    
     data_list[[i]] <- data
     
     # browser()
@@ -195,7 +238,8 @@ sim_rej_rate <- function(Tlen, L, B,
                    estimates = estimates,
                    covvar = covvars,
                    data = data_list,
-                   Tlen = Tlen)
+                   Tlen = Tlen,
+                   DGP = DGP)
     
     if (!is.null(remainder_true_ccfs$true_phi) && !is.null(remainder_true_ccfs$true_psi)) {
       output <- append(output, list(remainders = remainders))
@@ -207,15 +251,43 @@ sim_rej_rate <- function(Tlen, L, B,
 
 ### ------- testing stuff ----- ###
 
-#T10 <- 10
-#L <- 2
+# d <- 4
+A_matrix <- matrix(c(0.3, 0, 0, 0, 0.2, -0.3, 0.35, 0.7, -0.4, -0.6, 0.2, 0.5, 0.2, -0.4, 0.9, 0.3), byrow = T, nrow = 4)
+theta1 <- c(0.6, rep(0.4, 4 - 1))
+# theta2  <- diag(c(1.2, rep(1.0, d - 1)))
+# theta2[1, -1] <- 0
+
+theta2 <- matrix(c(0.22,  0.79,  0.95,  0.39,  0.37,  0.27,  0.11, -0.52, -0.21, -0.67,  0.43,  0.35,
+                 -0.29, -0.53, -0.01, -0.77), 4)
+theta3 <- diag(4) * 0.5
+
+parameters = list(A_matrix = theta2,
+                  theta = list(theta1 = theta1, theta2 = theta2, theta3 = theta3))
+
+test_run_AR <- sim_rej_rate(1000, 2, 2, DGP = "AR1", parameters = parameters, 
+                            alphas = seq(0.01, 1, 0.01), repetitions = 200)
+test_run_CIR <- sim_rej_rate(1000, 2, 2, DGP = "CIR", parameters = parameters,
+                         alphas = seq(0.01, 1, 0.01), repetitions = 200)
+
+test_run_AR$rejection_rate_df %>% ggplot(aes(x = alpha, y = rate_nonparametric)) + 
+  geom_line() + 
+  geom_abline(color = "red") + 
+  ylim(0, 1)
+
+test_run_CIR$rejection_rate_df %>% ggplot(aes(x = alpha, y = rate_nonparametric)) + 
+  geom_line() + 
+  geom_abline(color = "red") + 
+  ylim(0, 1)
+
+# T10 <- 10
+# L <- 2
 # A <- matrix(c(0.3, 0, 0, 0.2, 0.7, -0.4, -0.6, 0.9, 0.3), byrow = T, nrow = 3)
-#B <- 2
+# B <- 2
 # 
 # # data_test <- simulate_AR_process(Tlen, A)
 # # estimate_stat(data_test, L, B)
 # 
-# test_df_highdim_T10 <- sim_rej_rate(10, L = 2, B = 2, A_matrix = A, alphas = seq(0.1,1, 0.05), repetitions = 10,
+# test_df_highdim_T10 <- sim_rej_rate(10, L = 2, B = 2, DGP, A_matrix = A, alphas = seq(0.1,1, 0.05), repetitions = 10,
 #                         remainder_true_ccfs = list(
 #                                           true_phi = function(x, u, A) char_func_cond_X_next_given_X_previous_mat(A, x, u),
 #                                           true_psi = function(x, u, A, t) {
