@@ -28,7 +28,9 @@ estimate_stat <- function(data, L, B,
                           # true ccf for psi should also take time input
                           # and return a length(x) times length(u) matrix
                           ) {
-  if(is.data.frame(data)) data <- data #consider if this is a good idea...
+  #convert input data to a data.frame
+  #allows for multiple input types, in particular data of type ts - time-series
+  if(is.data.frame(data)) data <- data 
   else data <- as.data.frame(data)
   
   X <- data$X

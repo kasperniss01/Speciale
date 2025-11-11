@@ -11,7 +11,8 @@ simulate_AR_process <- function(Tlen,
                                 intercept = c(0, rep(0, d)),
                                 Sigma = diag(d + 1), #variance for the noise
                                 # burnin = 0, #optional, to discard first samples
-                                Z0 = c(0, rep(0, d)) #initial value of process
+                                Z0 = c(0, rep(0, d)), #initial value of process
+                                verbose = FALSE 
 ) {
   ### This functions generates samples from an AR(1) process Z = (X, Y) where 
   ### X in R and Y in R^d. The innovations are as follows
@@ -21,9 +22,11 @@ simulate_AR_process <- function(Tlen,
   ### Burnin is how many samples we discard in the beginning
   
   ### Todo: implement such that innovations might be non-linear
-  ### make it possible for Y to be multidimensional
   ### perform input check on dimensions for A and Sigma
-  ### print if we simulate under the null
+  
+  if (verbose) {
+    if (all(A[1, -1] == 0)) cat("simulating under the hypothesis \n")
+  }
   
   Z <- matrix(nrow = Tlen, ncol = d + 1) 
   Z[1, ] <- Z0
@@ -43,8 +46,11 @@ simulate_AR_process <- function(Tlen,
   #rename columns
   Y_name <- c()
   for(i in 1:d) Y_name[i] <- paste0("Y", i)
-  colnames(Z) <- c("X", Y_name)
-  as.data.frame(Z)
+  
+  # create time-series object
+  out <- ts(Z, start = 0, frequency = 1, names = c("X", Y_name))
+  
+  return(out)
 }
 
 
