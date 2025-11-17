@@ -18,6 +18,7 @@
 ### --- WARNING: all these functions only work under the hypothesis --- ###
 
 #install.packages("expm") #for matrix exponentiation should this be installed or?
+#install netcontrol package
 library(expm)
 
 ### ------------ Variance for X process --------------- ###
@@ -286,6 +287,16 @@ char_func_cond_Y_given_X_highdim_mat <- function(A, t, x_t, u, sigma_sq = 1) {
   
   return(out)
 }
+
+
+### --------- Stationary variance in VAR(1) process -------- ###
+stationary_covariance <- function(A, Sigma = diag(ncol(A))) {
+  netcontrol::dlyap(t(A), Sigma)
+}
+
+### equivalent to the sum characterization ###
+## N(0, sum_{i = 0}^\infty A^i Sigma (A^i)^T) ##
+
 
 
 
