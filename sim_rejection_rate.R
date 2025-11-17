@@ -111,6 +111,10 @@ sim_rej_rate <- function(Tlen, L, B,
     
     # browser()
     
+    # new mu and nu for each data replication
+    mu <- matrix(rnorm(B), ncol = 1)
+    nu <- matrix(rnorm(B * d), ncol = d)
+    
     est <- estimate_stat(
       data = data, L = L, B = B,
       mu = mu, nu = nu, 
@@ -253,19 +257,37 @@ sim_rej_rate <- function(Tlen, L, B,
 
 # d <- 4
 A_matrix <- matrix(c(0.3, 0, 0, 0, 0.2, -0.3, 0.35, 0.7, -0.4, -0.6, 0.2, 0.5, 0.2, -0.4, 0.9, 0.3), byrow = T, nrow = 4)
-theta1 <- c(0.6, rep(0.4, 4 - 1))
-# theta2  <- diag(c(1.2, rep(1.0, d - 1)))
-# theta2[1, -1] <- 0
+theta1 <- c(0.6, 0.4, 0.4, 0.4)
 
-theta2 <- matrix(c(0.22,  0.79,  0.95,  0.39,  0.37,  0.27,  0.11, -0.52, -0.21, -0.67,  0.43,  0.35,
-                 -0.29, -0.53, -0.01, -0.77), 4)
+theta2 <- matrix(
+  c(1.4, 0,    0,    0,
+    0.1, 1.1, -0.05, 0,
+    0,   0.05, 0.9,  0.10,
+    0,   0,   -0.05, 0.8),
+  nrow = 4, byrow = TRUE
+)
+
+d <- 4
+eigens <- diag(sort(runif(d, -1,1)), nrow = d)
+P_mat <- matrix(rnorm(d * d), nrow = d)
+
+A <- solve(P_mat) %*% eigens %*% P_mat %>% round(., 2)
+
+Anull <- A
+Anull[1, -1] <- 0
+
 theta3 <- diag(4) * 0.5
 
-parameters = list(A_matrix = theta2,
+parameters = list(A_matrix = Anull,
                   theta = list(theta1 = theta1, theta2 = theta2, theta3 = theta3))
 
-test_run_AR <- sim_rej_rate(1000, 2, 2, DGP = "AR1", parameters = parameters, 
+Tlen <- 2000
+B <- floor(Tlen^(1/4))
+L <- 10
+
+test_run_AR <- sim_rej_rate(Tlen, L, B, DGP = "AR1", parameters = parameters, 
                             alphas = seq(0.01, 1, 0.01), repetitions = 200)
+
 test_run_CIR <- sim_rej_rate(1000, 2, 2, DGP = "CIR", parameters = parameters,
                          alphas = seq(0.01, 1, 0.01), repetitions = 200)
 

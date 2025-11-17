@@ -60,7 +60,9 @@ simulate_sde <- function(Tlen, drift, diffusion, Z0, N = NULL,
   out[1, ] <- Z0
   
   for(i in 1:(N - 1)) {
-    z <- out[i, ] #previous Z 
+    z <- pmax(out[i, ], 0) #previous Z 
+    # cat("iteration: ", i, "value of z:", z)
+    if (any(is.na(z))) browser()
     t <- times[i] #previous time
     
     a <- drift_fun(z, t) #drift
@@ -90,20 +92,20 @@ simulate_sde <- function(Tlen, drift, diffusion, Z0, N = NULL,
 }
 
 #testing
-d <- 4
-theta1 <- c(0.6, rep(0.4, d - 1))
-theta2  <- diag(c(1.2, rep(1.0, d - 1)))
-theta2[1, -1] <- 0
-theta3 <- diag(d) * 0.5
-
-drift_z <- make_CIR_drift(theta1, theta2)
-diffusion_z <- make_CIR_diffusion(theta3)
-
-my_X <- simulate_sde(Tlen = 100, drift_z, diffusion_z, runif(4))
-
-
-plot(my_X$whole_path)
-plot(my_X$discretized_path)
+# d <- 4
+# theta1 <- c(0.6, rep(0.4, d - 1))
+# theta2  <- diag(c(1.2, rep(1.0, d - 1)))
+# theta2[1, -1] <- 0
+# theta3 <- diag(d) * 0.5
+# 
+# drift_z <- make_CIR_drift(theta1, theta2)
+# diffusion_z <- make_CIR_diffusion(theta3)
+# 
+# # my_X <- simulate_sde(Tlen = 200, drift_z, diffusion_z, runif(4))
+# 
+# 
+# plot(my_X$whole_path)
+# plot(my_X$discretized_path)
 
 
 ### using SDE package ###  
