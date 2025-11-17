@@ -259,50 +259,50 @@ sim_rej_rate <- function(Tlen, L, B,
 
 # d <- 4
 # A_matrix <- matrix(c(0.3, 0, 0, 0, 0.2, -0.3, 0.35, 0.7, -0.4, -0.6, 0.2, 0.5, 0.2, -0.4, 0.9, 0.3), byrow = T, nrow = 4)
-theta1 <- c(0.6, 0.4, 0.4, 0.4)
-
-theta2 <- matrix(
-  c(1.4, 0,    0,    0,
-    0.1, 1.1, -0.05, 0,
-    0,   0.05, 0.9,  0.10,
-    0,   0,   -0.05, 0.8),
-  nrow = 4, byrow = TRUE
-)
-
-A <- AR1_matrix(d = 3, seed = 2, gamma = 0)
-
-theta3 <- diag(4) * 0.5
-
-parameters = list(A_matrix = A,
-                  theta = list(theta1 = theta1, theta2 = theta2, theta3 = theta3))
-
-Tlen <- 5000
-B <- floor(Tlen^(1/4))
-L <- 10
-
-test_run_AR <- sim_rej_rate(Tlen, L, B, DGP = "AR1", parameters = parameters, 
-                            alphas = seq(0.01, 1, 0.01), repetitions = 200)
-
-
-test_run_CIR <- sim_rej_rate(1000, 2, 2, DGP = "CIR", parameters = parameters,
-                         alphas = seq(0.01, 1, 0.01), repetitions = 200)
-
-test_run_AR$rejection_rate_df %>% ggplot(aes(x = alpha, y = rate_nonparametric)) + 
-  geom_line() + 
-  geom_abline(color = "red") + 
-  ylim(0, 1)
-
-test <- readRDS("datasets/T5k_4D.rds")
-test <- readRDS("datasets/T2k_4D.rds")
-test$rejection_rate_df %>% ggplot(aes(x = alpha, y = rate_nonparametric)) + 
-  geom_line() + 
-  geom_abline(color = "red")
-
-test_run_CIR$rejection_rate_df %>% ggplot(aes(x = alpha, y = rate_nonparametric)) + 
-  geom_line() + 
-  geom_abline(color = "red") + 
-  ylim(0, 1)
-
+# theta1 <- c(0.6, 0.4, 0.4, 0.4)
+# 
+# theta2 <- matrix(
+#   c(1.4, 0,    0,    0,
+#     0.1, 1.1, -0.05, 0,
+#     0,   0.05, 0.9,  0.10,
+#     0,   0,   -0.05, 0.8),
+#   nrow = 4, byrow = TRUE
+# )
+# 
+# d <- 4
+# eigens <- diag(sort(runif(d, -1,1)), nrow = d)
+# P_mat <- matrix(rnorm(d * d), nrow = d)
+# 
+# A <- solve(P_mat) %*% eigens %*% P_mat %>% round(., 2)
+# 
+# Anull <- A
+# Anull[1, -1] <- 0
+# 
+# theta3 <- diag(4) * 0.5
+# 
+# parameters = list(A_matrix = Anull,
+#                   theta = list(theta1 = theta1, theta2 = theta2, theta3 = theta3))
+# 
+# Tlen <- 2000
+# B <- floor(Tlen^(1/4))
+# L <- 10
+# 
+# test_run_AR <- sim_rej_rate(Tlen, L, B, DGP = "AR1", parameters = parameters, 
+#                             alphas = seq(0.01, 1, 0.01), repetitions = 200)
+# 
+# test_run_CIR <- sim_rej_rate(1000, 2, 2, DGP = "CIR", parameters = parameters,
+#                          alphas = seq(0.01, 1, 0.01), repetitions = 200)
+# 
+# test_run_AR$rejection_rate_df %>% ggplot(aes(x = alpha, y = rate_nonparametric)) + 
+#   geom_line() + 
+#   geom_abline(color = "red") + 
+#   ylim(0, 1)
+# 
+# test_run_CIR$rejection_rate_df %>% ggplot(aes(x = alpha, y = rate_nonparametric)) + 
+#   geom_line() + 
+#   geom_abline(color = "red") + 
+#   ylim(0, 1)
+# 
 # T10 <- 10
 # L <- 2
 # A <- matrix(c(0.3, 0, 0, 0.2, 0.7, -0.4, -0.6, 0.9, 0.3), byrow = T, nrow = 3)
