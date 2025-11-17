@@ -1,5 +1,7 @@
 library(tidyverse)
 library(lightgbm)
+source("conditional_distributions.R")
+
 
 #todo: make sure packages are installed
 #todo: make doclines and clean up comments
@@ -11,7 +13,10 @@ simulate_AR_process <- function(Tlen,
                                 intercept = c(0, rep(0, d)),
                                 Sigma = diag(d + 1), #variance for the noise
                                 # burnin = 0, #optional, to discard first samples
-                                Z0 = c(0, rep(0, d)), #initial value of process
+                                Z0 = MASS::mvrnorm(n = 1, 
+                                                   mu = rep(0, d + 1), 
+                                                   Sigma = stationary_covariance(A, Sigma)),
+                                # Z0 = c(0, rep(0, d)), #initial value of process
                                 verbose = FALSE 
 ) {
   ### This functions generates samples from an AR(1) process Z = (X, Y) where 
@@ -27,7 +32,7 @@ simulate_AR_process <- function(Tlen,
   if (verbose) {
     if (all(A[1, -1] == 0)) cat("simulating under the hypothesis \n")
   }
-  
+  # browser()
   Z <- matrix(nrow = Tlen, ncol = d + 1) 
   Z[1, ] <- Z0
   
@@ -52,6 +57,8 @@ simulate_AR_process <- function(Tlen,
   
   return(out)
 }
+
+
 
 
 #deprecated??

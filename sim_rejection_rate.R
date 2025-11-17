@@ -10,6 +10,7 @@ source("oracle_statistic.R") #don't think this is needed
 source("conditional_distributions.R") #this is needed
 source("simulate_SDE.R")
 source("CIR_drift_diffusion.R")
+source("simulate_parameters.R")
 
 library(vars)
 
@@ -66,8 +67,9 @@ sim_rej_rate <- function(Tlen, L, B,
   
   # d <- ncol(A_matrix) - 1
   
-  mu <- matrix(rnorm(B), ncol = 1)
-  nu <- matrix(rnorm(B * d), ncol = d)
+  # if mu and nu should be the same for all data replications  
+  # mu <- matrix(rnorm(B), ncol = 1)
+  # nu <- matrix(rnorm(B * d), ncol = d)
   K <- length(alphas)
   
   
