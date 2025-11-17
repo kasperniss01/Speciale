@@ -160,7 +160,7 @@ sim_rej_rate <- function(Tlen, L, B,
       draws_parametric_plugins <- sim_crit_draws(covvar_parametric_plugin)
       crits_parametric_plugins <- crit_from_draws(draws_parametric_plugins, alphas)
       
-      reject_parametric_plugins[, i] <- (S_parametric_plugin > crits)
+      reject_parametric_plugins[, i] <- (S_parametric_plugin > crits_parametric_plugins)
       
     }
     
