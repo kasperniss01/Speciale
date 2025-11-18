@@ -1,3 +1,4 @@
+rm(list = ls())
 source("sim_rejection_rate.R")
 
 #### Run algorithm on 4D AR1 process, under local alternatives, including H0.
