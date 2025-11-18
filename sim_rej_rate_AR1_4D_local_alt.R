@@ -1,9 +1,12 @@
+rm(list = ls())
 source("sim_rejection_rate.R")
 
 #### Run algorithm on 4D AR1 process, under local alternatives, including H0.
 
-Tlens_pwr <- c(1000, 2000, 3000, 4000, 5000)
-baseline_gammas <- c(0,3,7)
+Tlens_pwr <- c(5000) #c(1000, 2000, 3000, 4000, 5000)
+#david kører c(0, 3, 7)
+#kasper kører c(1, 5, 9)
+baseline_gammas <- c(0) #c(1, 5, 9) # c(0, 1, 3, 5, 7, 9)
 B_func <- function(T) floor(T^(1/4))
 L = 10
 repetitions <- 200
@@ -29,7 +32,8 @@ for(Tlen in Tlens_pwr){
     simulate_temp <- sim_rej_rate(
       Tlen = Tlen,
       L = L,
-      B = B_func(Tlen),
+      # B = B_func(Tlen),
+      B = 7,
       parameters = list(
         A_matrix = Alocal
       ),
