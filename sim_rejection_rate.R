@@ -20,7 +20,7 @@ library(vars)
 
 #only for AR1 process, consider changing data-generating process to be argument so it works in general
 sim_rej_rate <- function(Tlen, L, B,
-                         DGP = c("AR1", "CIR"),
+                         DGP = c("AR1", "CIR", "IID"),
                          parameters = list(), 
                          # A_matrix, 
                          alphas,
@@ -64,6 +64,13 @@ sim_rej_rate <- function(Tlen, L, B,
     
   }
   
+  if (DGP == "IID") {
+    if (is.null(parameters$distribution)) stop("Must provide distribution for IID")
+    else {
+      distribution <- parameters$distribution
+      d <- parameters$d
+    }
+  }
   
   # d <- ncol(A_matrix) - 1
   
@@ -106,7 +113,11 @@ sim_rej_rate <- function(Tlen, L, B,
       time_series <- simulate_sde(Tlen = Tlen, drift = drift, diffusion = diffusion, Z0 = Z0, N = N,
                                   verbose = verbose)
       data <- time_series$discretized_path #choose path corresponding to integer values
-      }
+    }
+    
+    if(DGP == "IID") {
+      data <- distribution(Tlen)
+    }
     
     
     data_list[[i]] <- data
