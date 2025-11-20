@@ -136,7 +136,7 @@ A <- runif(16, -1, 1) %>% matrix(4,4) %>% round(2)
 # }
 
 
-Tlens_pwr <- c(100, 200, 300, 400, 500)
+Tlens_pwr <- c(1290, 1300, 1780, 1790, 2400, 2410, 3160, 3170, 4090, 4100, 5220, 6560, 6570, 8140, 8150)
 baseline_gammas <- c(0)
 for(Tlen in Tlens_pwr){
   for(baseline_gamma in baseline_gammas){
