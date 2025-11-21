@@ -9,7 +9,7 @@ make_CIR_drift <- function(theta1, theta2) {
   }
   else hypothesis_drift = FALSE
   
-  drift_fun <- function(z, t) as.numeric(theta1 - theta2 %*% z)
+  drift_fun <- function(z, t) as.numeric(theta1 + theta2 %*% z)
   
   out <- list(drift = drift_fun, hypothesis_drift = hypothesis_drift)
   
