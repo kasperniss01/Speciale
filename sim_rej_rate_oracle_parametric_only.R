@@ -268,84 +268,32 @@ sim_rej_rate_oracle_parametric_only <- function(Tlen, L, B,
 }
 
 
-set.seed(420)
-A_mat <- runif(16, -1, 1) %>% matrix(4,4) %>% round(2)
+
 
 # 
-# profvis::profvis(
+# set.seed(420)
+# A_mat <- runif(16, -1, 1) %>% matrix(4,4) %>% round(2)
+# A_mat[1,-1] <- 0
+# 
 # 
 # sim_rej_rate_oracle_parametric_only(
-#         Tlen = 1000,
-#         L = 10,
-#         B = 2,
-#         parameters = list(
-#           A_matrix = A_mat
-#         ),
-#         alphas = seq(0.005, 1, 0.005),
-#         remainder_true_ccfs = list(
-#           true_phi = function(x, u, A) char_func_cond_X_next_given_X_previous_mat(A, x, u),
-#           true_psi = function(x, u, A, t) {char_func_cond_Y_given_X_highdim_mat(A, t, x, u)}
-#         ),
-#         parametric = TRUE,
-#         repetitions = 10
-#       )
-# 
-# 
-# 
-# 
+#   Tlen = 1000,
+#   L = 10,
+#   B = 13,
+#   parameters = list(
+#     A_matrix = A_mat
+#   ),
+#   alphas = seq(0.005, 1, 0.005),
+#   remainder_true_ccfs = list(
+#     true_phi = function(x, u, A) char_func_cond_X_next_given_X_previous_mat(A, x, u),
+#     true_psi = function(x, u, A, t, stationary_covariance) {stationary_ccf_of_Y_given_X(A, x, u, stationary_mean = rep(0,nrow(A)),
+#                                                                                         stationary_covariance = stationary_covariance)}
+#   ),
+#   parametric = TRUE,
+#   repetitions = 10
 # )
+# 
 
-
-
-profvis::profvis(
-
-
-sim_rej_rate_oracle_parametric_only(
-  Tlen = 1000,
-  L = 10,
-  B = 2,
-  parameters = list(
-    A_matrix = A_mat
-  ),
-  alphas = seq(0.005, 1, 0.005),
-  remainder_true_ccfs = list(
-    true_phi = function(x, u, A) char_func_cond_X_next_given_X_previous_mat(A, x, u),
-    true_psi = function(x, u, A, t, stationary_covariance) {stationary_ccf_of_Y_given_X(A, x, u, stationary_mean = rep(0,nrow(A)), 
-                                                                                        stationary_covariance = stationary_covariance)}
-  ),
-  parametric = TRUE,
-  repetitions = 10
-)
-
-
-
-)
-
-
-
-profvis::profvis(
-  
-  
-  sim_rej_rate_oracle_parametric_only(
-    Tlen = 100000,
-    L = 10,
-    B = 2,
-    parameters = list(
-      A_matrix = A_mat
-    ),
-    alphas = seq(0.005, 1, 0.005),
-    remainder_true_ccfs = list(
-      true_phi = function(x, u, A) char_func_cond_X_next_given_X_previous_mat(A, x, u),
-      true_psi = function(x, u, A, t, stationary_covariance) {stationary_ccf_of_Y_given_X(A, x, u, stationary_mean = rep(0,nrow(A)), 
-                                                                                          stationary_covariance = stationary_covariance)}
-    ),
-    parametric = TRUE,
-    repetitions = 10
-  )
-  
-  
-  
-)
 
 
 
