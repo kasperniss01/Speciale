@@ -1,7 +1,5 @@
 ### document for simulating rejection rate 
 ### right now only works for 2D-AR(1) processes!!!
-rm(list = ls())
-
 
 source("simulate_AR_process.R") #this is needed
 source("estimate_stat_oracle_parametric_only.R") #this is needed
@@ -27,7 +25,8 @@ sim_rej_rate_oracle_parametric_only <- function(Tlen, L, B,
                          repetitions = 500,
                          remainder_true_ccfs = list(true_phi = NULL, true_psi = NULL), 
                          parametric = FALSE, 
-                         verbose = FALSE) {
+                         verbose = FALSE,
+                         random_seeds = seq_len(repetitions)) {
   
   # browser()
   
@@ -106,16 +105,27 @@ sim_rej_rate_oracle_parametric_only <- function(Tlen, L, B,
   
   
   for (i in seq_len(repetitions)) {
-    if (DGP == "AR1") data <- simulate_AR_process(Tlen, A_matrix, d = d, 
+    if (DGP == "AR1") {
+      if(!is.null(random_seeds) && length(random_seeds) == repetitions) set.seed(random_seeds[i])
+    
+      data <- simulate_AR_process(Tlen, A_matrix, d = d, 
                                                   verbose = verbose)
+    }
     if (DGP == "CIR") {
       Z0 <- rep(1, d + 1)
+      
+      if(!is.null(random_seeds) && length(random_seeds) == repetitions) set.seed(random_seeds[i])
+      
       time_series <- simulate_sde(Tlen = Tlen, drift = drift, diffusion = diffusion, Z0 = Z0, N = N,
                                   verbose = verbose)
       data <- time_series$discretized_path #choose path corresponding to integer values
     }
     
     if(DGP == "IID") {
+      
+      if(!is.null(random_seeds) && length(random_seeds) == repetitions) set.seed(random_seeds[i])
+      
+      
       data <- distribution(Tlen)
     }
     
