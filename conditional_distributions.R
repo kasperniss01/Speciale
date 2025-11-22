@@ -305,6 +305,29 @@ stationary_covariance <- function(A, Sigma = diag(ncol(A))) {
 ### equivalent to the sum characterization ###
 ## N(0, sum_{i = 0}^\infty A^i Sigma (A^i)^T) ##
 
+#new variance and covariance functions#
+
+var_Xt <- function(A) {
+  #imitates variance_Xt when t is big
+  W <- stationary_covariance(A)
+  
+  W[1, 1]
+}
+
+variance_Yt <- function(A) {
+  # browser()
+  d <- nrow(A)
+  W <- stationary_covariance(A)
+  
+  W[2:d, 2:d]
+}
+
+Covariance_Xt_Yt <- function(A) {
+  d <- nrow(A)
+  W <- stationary_covariance(A)
+  
+  matrix(W[2:d, 1], ncol = 1)
+}
 
 ### --------- Stationary CCF of Y | X  process -------- ###
 
