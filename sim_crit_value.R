@@ -12,8 +12,7 @@ sim_crit_draws <- function(covvar, nrep = 1e5) {
   Z <- matrix(rnorm(m * nrep), m, nrep)
   V <- R %*% Z
   
-  col_max_abs <- function(M) apply(M, 2, function(v) max(abs(v)))
-  col_max_abs(V)
+  Rfast::colMaxs(abs(V), value = TRUE)
 }
 
 crit_from_draws <- function(draws, alpha) {

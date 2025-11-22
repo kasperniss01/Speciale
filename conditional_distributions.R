@@ -54,10 +54,14 @@ Covariance_Xt_Yt_highdim <- function(A, t, sigma1_sq = 1) {
   out <- matrix(0, nrow = d, ncol = length(t))
   b <- matrix(b, ncol = 1)
   
+  
+  inv_Id_minus_aC <- solve(I_d - a * C)
+  inv_aId_minus_C <- solve(a * I_d - C)
+  
   for (i in seq_along(t)) {
     ti <- t[i]
-    term1 <- (I_d - (a * C) %^% ti) %*% solve(I_d - a * C)
-    term2 <- a^ti / a * ((a^ti * I_d - C %^% ti) %*% solve(a * I_d - C))
+    term1 <- (I_d - (a * C) %^% ti) %*% inv_Id_minus_aC
+    term2 <- a^ti / a * ((a^ti * I_d - C %^% ti) %*% inv_aId_minus_C)
     
     out[, i] <- as.vector(a * sigma1_sq / (1 - a^2) * (term1 - term2) %*% b)
   }
@@ -240,6 +244,7 @@ char_func_cond_X_next_given_X_previous_mat <- function(A, x_prev, u) {
   #x_prev a vector
   #u a vector
   
+  
   #returns a matrix of dimension length(x_prev) x length(u)
   
   a <- as.numeric(A[1, 1])
@@ -261,6 +266,9 @@ char_func_cond_Y_given_X_highdim_mat <- function(A, t, x_t, u, sigma_sq = 1) {
   # u is either a matrix of size either dx1 or B x d if mu or nu is input
   
   # returns matrix of size length(t) x length(u)
+  
+  #browser()
+  
   
   a <- as.numeric(A[1, 1]) #scalar
   b <- as.vector(A[-1, 1]) #dx1 vector
@@ -296,6 +304,39 @@ stationary_covariance <- function(A, Sigma = diag(ncol(A))) {
 
 ### equivalent to the sum characterization ###
 ## N(0, sum_{i = 0}^\infty A^i Sigma (A^i)^T) ##
+
+
+### --------- Stationary CCF of Y | X  process -------- ###
+
+stationary_ccf_of_Y_given_X <- function(A, x_t, u,
+                                        stationary_mean = rep(0, nrow(A)), 
+                                        stationary_covariance = stationary_covariance(A)
+                                        ) {
+ # browser()
+  
+  VarX <- stationary_covariance[1, 1]
+  CovXY <- stationary_covariance[-1, 1, drop = F]
+  VarY <- stationary_covariance[-1, -1, drop = F]
+  
+  mean_cond <-  x_t %*% (t(CovXY) / VarX)
+  
+  var_cond <- VarY - (CovXY %*% t(CovXY)) / VarX
+  
+  # quadratic term (N)
+  quad <- rowSums((u %*% var_cond) * u)
+  
+  # linear term (N × T)
+  Umu <- u %*% t(mean_cond)
+  
+  # CF(T × N)
+  t( exp(1i * Umu - 0.5 * quad) )
+  
+}
+
+
+
+
+
 
 
 
