@@ -2,26 +2,38 @@ rm(list = ls())
 source("sim_rejection_rate.R")
 source("simulate_parameters.R")
 
+#to initialize .Random.seed
 B_func <- function(T) floor(T^(1/4))
 L <- 10
 repetitions <- 200
 seed <- 420
 d <- 3 #dimension of Y is 3
+e <- 1/sqrt(d) * rep(1, d)
 
-Tlens_pwr <- c(100, 200, 300, 400, 500, 600, 700, 800, 900, 1000,
-               2000, 3000, 4000, 5000, 10000)
-baseline_gammas <- c(0, 1, 3, 5, 7, 9, 11, 13, 15)
+# Tlens_pwr <- c(100, 200, 300, 400, 500, 600, 700, 800, 900, 1000,
+#                2000, 3000, 4000, 5000)
+
+Tlens_pwr <- c(1000, 2000, 3000, 4000, 5000)
+baseline_gammas <- c(1, 3, 5, 7, 9, 11)
+
+#initial theta values
+theta_base <- CIR_param(d = d, seed = seed, gamma = 0) 
 
 
 for(Tlen in Tlens_pwr){
   for(baseline_gamma in baseline_gammas){
     
-    theta <- CIR_param(d = d, seed = seed, gamma = baseline_gamma)
-    
     print(paste0("Tlen = ", Tlen, ", baseline gamma = ", baseline_gamma))
     
-    gamma = baseline_gamma / sqrt(Tlen)
+    gamma <- baseline_gamma / sqrt(Tlen)
     
+    theta_base <- theta_base
+    theta2_local <- theta_base$theta2
+    theta2_local[1, -1] <- gamma * e
+    
+    theta_local <- list(theta1 = theta_base$theta1,
+                        theta2 = theta2_local,
+                        theta3 = theta_base$theta3)
     # Alocal <- A
     # Alocal[1,-1] <- gamma*rep(1/sqrt(3), 3)
     
@@ -31,7 +43,7 @@ for(Tlen in Tlens_pwr){
       B = B_func(Tlen),
       DGP = "CIR", 
       parameters = list(
-        theta = theta
+        theta = theta_local
       ),
       alphas = seq(0.005, 1, 0.005),
       # remainder_true_ccfs = list(
@@ -57,7 +69,7 @@ for(Tlen in Tlens_pwr){
       sim_rej_obj = simulate_temp
     )
     
-    saveRDS(sim_temp, file = paste0("datasets/local_alternatives_4D/sim_rej_rate_CIR_4D_local_alt_Tlen_", Tlen, "_baseline_gamma_", baseline_gamma, ".rds"))
+    saveRDS(sim_temp, file = paste0("datasets/local_alternatives_4D/2nd_sim_rej_rate_CIR_4D_local_alt_Tlen_", Tlen, "_baseline_gamma_", baseline_gamma, ".rds"))
     
     
   }
