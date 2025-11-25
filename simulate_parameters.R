@@ -1,5 +1,7 @@
 ### functionality to simulate parameters for AR1 and CIR processes ###
 
+runif(1)
+
 ### -------------- AR1 process ----------- ###
 
 # We require that the eigenvalues all lie within the unit circle #
@@ -14,7 +16,7 @@ AR1_matrix <- function(d, maxiter = 1e4, seed, gamma,
   #simulates the eigenvalus of A to be between -1 and 1
   #creates 
   
-  old_seed <- .Random.seed
+  old_seed <- .Random.seed #this can make the function break
   on.exit({.Random.seed <<- old_seed})
   set.seed(seed)
   
@@ -39,7 +41,6 @@ AR1_matrix <- function(d, maxiter = 1e4, seed, gamma,
 
 # requires real part of eigenvalues of theta2 is negative
 # requires theta1_i > sigma_i^2 = theta3_ii
-# will always
 CIR_param <- function(d, sigma = rep(1, d + 1), 
                       theta1_range = c(0, 2),
                       diag_range = c(0, 2),
@@ -48,7 +49,7 @@ CIR_param <- function(d, sigma = rep(1, d + 1),
                       e = 1/sqrt(d) * rep(1, d)) {
   
   #set seed only for function call
-  old_seed <- .Random.seed
+  old_seed <- .Random.seed #this can make the function break
   on.exit({.Random.seed <<- old_seed})
   set.seed(seed)
   
@@ -82,4 +83,8 @@ CIR_param <- function(d, sigma = rep(1, d + 1),
   list(theta1 = theta1, theta2 = theta2, theta3 = theta3)
 }
 
-CIR_param(d = 3, seed = 1, gamma = 1)
+# CIR_param(d = 3, seed = 1, gamma = 0)
+# runif(10)
+# 
+# CIR_param(d = 3, seed = 1, gamma = 1)
+# runif(10)
