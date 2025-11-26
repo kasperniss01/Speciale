@@ -51,7 +51,7 @@ estimate_stat <- function(data, L, B,
   Covvar_Est_true <- list()
   Covvar_Est_parametric_plugin <- list()
   
-  for (l in 1:(L - 1)) {
+  for (l in 1:L) {
     # indices for training and evaluation
     index_train <- II_bar_l(Tlen, L, l, p)
     index_eval <- II_l(Tlen, L, l)
@@ -177,7 +177,7 @@ estimate_stat <- function(data, L, B,
     
   }
   
-  normalizer <- (n - 1) * (L - 1)
+  normalizer <- (n - 1) * L
   
   Covvar_Est <- Reduce("+", Covvar_Est) / normalizer
   
@@ -234,17 +234,19 @@ estimate_stat <- function(data, L, B,
   return(output)
 }
 
-# test <- estimate_stat(data2, n, L, B,
-#               remainder_true_ccfs = list(
-#                 true_phi = function(x, u) char_func_cond_X_next_given_X_previous_mat(A[1,1], x, u),
-#                 true_psi = function(x, u, t) char_func_cond_Y_given_X_mat(A[1,1], A[2,1], A[2,2], t, x, u)
-#               )
+
+# data_test <- simulate_AR_process(100, A)
+# test <- estimate_stat(data = data_test, L = 10, B = 2
+#               # remainder_true_ccfs = list(
+#               #   true_phi = function(x, u, A) char_func_cond_X_next_given_X_previous_mat(A, x, u),
+#               #   true_psi = function(x, u, A, t) char_func_cond_Y_given_X_mat(A, t, x, u)
+#               # )
 #             )
-
-
+# 
+# 
 # small_data <- simulate_AR_process(10, d = 3, A = matrix(c(0.1, rep(0, 3), rep(0.1, 12)), nrow = 4, byrow = T))
 # estimate_stat(small_data, 5, 2)
-
+# 
 # estimate_stat(my_X$discretized_path, 2, 2)
 
 
