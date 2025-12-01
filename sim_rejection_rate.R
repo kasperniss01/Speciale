@@ -28,7 +28,7 @@ sim_rej_rate <- function(Tlen, L, B,
                          remainder_true_ccfs = list(true_phi = NULL, true_psi = NULL), 
                          parametric = FALSE, 
                          verbose = FALSE,
-                         random_seeds = seq_len(repetitions)) {
+                         random_seeds = NULL) {
 
   # browser()
   
@@ -114,7 +114,8 @@ sim_rej_rate <- function(Tlen, L, B,
       
       
       data <- simulate_AR_process(Tlen, A_matrix, d = d, 
-                                                  verbose = verbose)}
+                                                  verbose = verbose)
+      }
     if (DGP == "CIR") {
       
       if(!is.null(random_seeds) && length(random_seeds) == repetitions) set.seed(random_seeds[i])
@@ -138,7 +139,10 @@ sim_rej_rate <- function(Tlen, L, B,
     # browser()
     
     # new mu and nu for each data replication
+    
+    if(!is.null(random_seeds) && length(random_seeds) == repetitions) set.seed(random_seeds[i])
     mu <- matrix(rnorm(B), ncol = 1)
+    if(!is.null(random_seeds) && length(random_seeds) == repetitions) set.seed(random_seeds[i] + 1e4)
     nu <- matrix(rnorm(B * d), ncol = d)
     
     #change to sim_rejection_rate: if parametric, call with plugin for AR1 and true_CCFS
@@ -296,7 +300,7 @@ sim_rej_rate <- function(Tlen, L, B,
 
 # d <- 4
 # A_matrix <- matrix(c(0.3, 0, 0, 0, 0.2, -0.3, 0.35, 0.7, -0.4, -0.6, 0.2, 0.5, 0.2, -0.4, 0.9, 0.3), byrow = T, nrow = 4)
-theta1 <- c(0.6, 0.4, 0.4, 0.4)
+# theta1 <- c(0.6, 0.4, 0.4, 0.4)
 
 # theta2 <- matrix(
 #   c(1.4, 0,    0,    0,
