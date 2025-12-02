@@ -10,18 +10,24 @@ fit_lgb <- function(X, y, num_round = 300, params = list(),
   # y response
   # objective is what kind of regression to do
   
+  X_mat <- as.matrix(X)
+  n <- nrow(X_mat) # number of features
+  
   dtrain <- lgb.Dataset(data = as.matrix(X), label = y)
+  
   default <- list(
     objective = objective,
     learning_rate = 0.05,  #hopefully sane parameters 
-    num_leaves = 31,
-    min_data_in_leaf = 20,
-    feature_fraction = 0.9,
-    bagging_fraction = 0.8,
+    num_leaves = 20,
+    min_data_in_leaf = max(100, floor(0.005 * n)),
+    feature_fraction = 1,
+    bagging_fraction = 0.7,
     bagging_freq = 1,
+    lambda_l2 = 2,
     verbose = -1,
     seed = 1
   )
+  
   params <- modifyList(default, params)
   lgb.train(params = params, data = dtrain, nrounds = num_round) #fits lgb model
 }

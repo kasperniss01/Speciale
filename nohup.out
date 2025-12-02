@@ -1,0 +1,60 @@
+── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
+✔ dplyr     1.1.4     ✔ readr     2.1.5
+✔ forcats   1.0.0     ✔ stringr   1.5.1
+✔ ggplot2   3.5.1     ✔ tibble    3.2.1
+✔ lubridate 1.9.3     ✔ tidyr     1.3.1
+✔ purrr     1.0.2     
+── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+✖ dplyr::filter() masks stats::filter()
+✖ dplyr::lag()    masks stats::lag()
+ℹ Use the conflicted package (<http://conflicted.r-lib.org/>) to force all conflicts to become errors
+Indlæser krævet pakke: Matrix
+
+Vedhæfter pakke: ‘Matrix’
+
+De følgende objekter er maskerede fra ‘package:tidyr’:
+
+    expand, pack, unpack
+
+
+Vedhæfter pakke: ‘expm’
+
+Det følgende objekt er maskeret fra ‘package:Matrix’:
+
+    expm
+
+Indlæser krævet pakke: MASS
+
+Vedhæfter pakke: ‘MASS’
+
+Det følgende objekt er maskeret fra ‘package:dplyr’:
+
+    select
+
+Indlæser krævet pakke: strucchange
+Indlæser krævet pakke: zoo
+
+Vedhæfter pakke: ‘zoo’
+
+De følgende objekter er maskerede fra ‘package:base’:
+
+    as.Date, as.Date.numeric
+
+Indlæser krævet pakke: sandwich
+
+Vedhæfter pakke: ‘strucchange’
+
+Det følgende objekt er maskeret fra ‘package:stringr’:
+
+    boundary
+
+Indlæser krævet pakke: urca
+Indlæser krævet pakke: lmtest
+Cross-fitting, L = 1[1] "Tlen = 2000, baseline gamma = 0, B = 10"
+[LightGBM] [Fatal] Check failed: (num_data) > (0) at io/dataset.cpp, line 39 .
+
+Fejl i data$construct() : 
+  Check failed: (num_data) > (0) at io/dataset.cpp, line 39 .
+
+Kald: sim_rej_rate ... phi_hat -> fit_lgb -> lgb.train -> <Anonymous> -> .Call
+Kørsel stoppet

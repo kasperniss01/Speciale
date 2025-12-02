@@ -49,7 +49,8 @@ comb_rej_rate_large_obj <- function(...) {
     df_i <- df_i %>% mutate(Tlen = metadata_i$Tlen,
                             B = metadata_i$B,
                             baseline_gamma = metadata_i$baseline_gamma,
-                            actual_gamma = metadata_i$actual_gamma)
+                            actual_gamma = metadata_i$actual_gamma,
+                            L = metadata_i$L)
     
     df <- bind_rows(df, df_i)
   }
