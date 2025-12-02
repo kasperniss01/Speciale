@@ -104,6 +104,7 @@ sim_rej_rate <- function(Tlen, L, B,
                               dimnames = list(paste0("alpha=", alphas), NULL))
   
   data_list <- list()
+  estimate_stat_obj_list <- list()
   
   
   for (i in seq_len(repetitions)) {
@@ -113,8 +114,7 @@ sim_rej_rate <- function(Tlen, L, B,
       if(!is.null(random_seeds) && length(random_seeds) == repetitions) set.seed(random_seeds[i])
       
       
-      data <- simulate_AR_process(Tlen, A_matrix, d = d, 
-                                                  verbose = verbose)
+      data <- simulate_AR_process(Tlen, A_matrix, d = d, verbose = verbose)
       }
     if (DGP == "CIR") {
       

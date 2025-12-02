@@ -48,11 +48,8 @@ estimate_stat <- function(data, L, B,
   Gamma_hat <- true_Gamma <- Gamma_parametric_plugin <- R1 <- R2 <- R3 <- complex(length.out = B)
   
   Covvar_Est <- list()
-  all_gamma_hat <- matrix(NA, nrow = Tlen-L, ncol = 2*B)
   Covvar_Est_true <- list()
-  all_gamma_true <- matrix(NA, nrow = Tlen-L, ncol = 2*B)
   Covvar_Est_parametric_plugin <- list()
-  all_gamma_parametric_plugin <- matrix(NA, nrow = Tlen-L, ncol = 2*B)
   
   for (l in 1:L) {
     # indices for training and evaluation
@@ -116,15 +113,8 @@ estimate_stat <- function(data, L, B,
     resX <- cc_X - phi_hat_mat
     resY <- cc_Y - psi_hat_mat
     
-    # browser()
+    browser()
     lambda_hat <- resX * resY
-    
-    #browser()
-    
-    
-    all_gamma_hat[((l - 1)*(n-1) +1) : (l*(n-1)), ] <- cbind(Re(lambda_hat), Im(lambda_hat))
-    
-    
     
     
     #estimate variance contribution for each l
@@ -145,13 +135,11 @@ estimate_stat <- function(data, L, B,
       
       lambda_true <- true_resX * true_resY
       
-      R1 <- R1 + colSums((true_phi - phi_hat_mat) * (true_psi - psi_hat_mat))
-      R2 <- R2 + colSums((cc_X - true_phi) * (true_psi - psi_hat_mat))
-      R3 <- R3 + colSums((cc_Y - true_psi) * (true_phi - phi_hat_mat))
+      R1 <- R1 + colSums((cc_X - true_phi) * (true_psi - psi_hat_mat))
+      R2 <- R2 + colSums((cc_Y - true_psi) * (true_phi - phi_hat_mat))
+      R3 <- R3 + colSums((true_phi - phi_hat_mat) * (true_psi - psi_hat_mat))
       
       true_Gamma <- true_Gamma + colSums((cc_X - true_phi) * (cc_Y - true_psi))
-      
-      all_gamma_true[((l - 1)*(n-1) +1) : (l*(n-1)), ] <- cbind(Re(lambda_true), Im(lambda_true))
       
       Covvar_Est_true[[l]] <- crossprod(cbind(Re(lambda_true), Im(lambda_true)))  # 2B x 2B
       
@@ -180,7 +168,6 @@ estimate_stat <- function(data, L, B,
       
       Gamma_parametric_plugin <- Gamma_parametric_plugin + colSums(lambda_parametric_plugin)
       
-      all_gamma_parametric_plugin[((l - 1)*(n-1) +1) : (l*(n-1)), ] <- cbind(Re(lambda_parametric_plugin), Im(lambda_parametric_plugin))
       
       Covvar_Est_parametric_plugin[[l]] <- crossprod(cbind(Re(lambda_parametric_plugin), Im(lambda_parametric_plugin)))  # 2B x 2B
       # could also return S_parametric_plugin if desired      
@@ -205,7 +192,6 @@ estimate_stat <- function(data, L, B,
   
   output <- list(S_hat = S_hat, 
                  Covvar_Est = Covvar_Est,
-                 all_gamma_hat = all_gamma_hat,
                  Gamma_hat = Gamma_hat
                  )
   
@@ -225,7 +211,6 @@ estimate_stat <- function(data, L, B,
     output <- append(output,
                      list(Remainders = data.frame(R1 = R1, R2 = R2, R3 = R3), #used to be list
                           Covvar_Est_true = Covvar_Est_true,
-                          all_gamma_true = all_gamma_true,
                           true_Gamma = true_Gamma,
                           S_true = S_true))
   }
@@ -241,7 +226,6 @@ estimate_stat <- function(data, L, B,
                      list(parametric_plugin = 
                             list(Covvar_Est_parametric_plugin = Covvar_Est_parametric_plugin,
                                  Gamma_parametric_plugin = Gamma_parametric_plugin,
-                                 all_gamma_parametric_plugin = all_gamma_parametric_plugin,
                                  S_parametric_plugin = S_parametric_plugin)
                           )
                      )

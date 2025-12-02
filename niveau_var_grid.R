@@ -126,6 +126,15 @@ niveau_var_grid_df_small <- comb_rej_rate_large_obj(
   readRDS("datasets/niveau/VAR/grid_Tlen_200_baseline_gamma_0_B_40.rds")
 )
 
+
+#full plot for local alternative
+local_alt_fast_B_full_plot <- local_alt_df %>% 
+  pivot_longer(cols = c(rate_nonparametric, rate_parametric_plugin, rate_oracle_plugin), 
+               values_to = "rate",
+               names_to = "method") %>% 
+  ggplot(aes(x = alpha, y = rate, color = method)) + 
+  geom_line() + 
+
 niveau_var_grid_df %>% 
   dplyr::select(c(alpha, rate_nonparametric, se_nonparametric, B, Tlen)) %>% 
   mutate(B = factor(B)) %>% 

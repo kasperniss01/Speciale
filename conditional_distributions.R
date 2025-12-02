@@ -267,7 +267,7 @@ char_func_cond_Y_given_X_highdim_mat <- function(A, t, x_t, u, sigma_sq = 1) {
   
   # returns matrix of size length(t) x length(u)
   
-  #browser()
+  # browser()
   
   
   a <- as.numeric(A[1, 1]) #scalar
