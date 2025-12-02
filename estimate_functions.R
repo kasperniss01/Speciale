@@ -98,6 +98,8 @@ psi_hat <- function(training_X, training_Y , evaluation_X, nu, num_rounds, lgb_p
   
   # returns matrix of predictions based on lgbm-model
   
+  # browser()
+  
   N_train <- length(training_X)
   N_eval <- length(evaluation_X)
   B <- if (is.matrix(nu)) nrow(nu) else length(nu)

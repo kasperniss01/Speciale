@@ -113,7 +113,7 @@ estimate_stat <- function(data, L, B,
     resX <- cc_X - phi_hat_mat
     resY <- cc_Y - psi_hat_mat
     
-    # browser()
+    browser()
     lambda_hat <- resX * resY
     
     #estimate variance contribution for each l
@@ -134,9 +134,9 @@ estimate_stat <- function(data, L, B,
       
       lambda_true <- true_resX * true_resY
       
-      R1 <- R1 + colSums((true_phi - phi_hat_mat) * (true_psi - psi_hat_mat))
-      R2 <- R2 + colSums((cc_X - true_phi) * (true_psi - psi_hat_mat))
-      R3 <- R3 + colSums((cc_Y - true_psi) * (true_phi - phi_hat_mat))
+      R1 <- R1 + colSums((cc_X - true_phi) * (true_psi - psi_hat_mat))
+      R2 <- R2 + colSums((cc_Y - true_psi) * (true_phi - phi_hat_mat))
+      R3 <- R3 + colSums((true_phi - phi_hat_mat) * (true_psi - psi_hat_mat))
       
       true_Gamma <- true_Gamma + colSums((cc_X - true_phi) * (cc_Y - true_psi))
       
