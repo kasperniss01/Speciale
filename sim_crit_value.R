@@ -16,7 +16,7 @@ sim_crit_draws <- function(covvar, nrep = 1e5) {
 }
 
 sim_crit_draws_alt <- function(all_gamma, nrep = 1e5) {
-  # all_gamma is (T - L) x (2 * B) one row pr. gamma, on col pr. B/Re/Im
+  # all_gamma is (T - L) x (2 * B) one row pr. gamma, on col pr. B/Re/Im,{ (T-L) = n }
   # nrep is number of replications for quantile determination
   
   #returns vector of length(nrep) of samples from ||N(0, covvar)||_infty
