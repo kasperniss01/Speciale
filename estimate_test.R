@@ -116,6 +116,7 @@ estimate_stat <- function(data, L, B,
     browser()
     lambda_hat <- resX * resY
     
+    
     #estimate variance contribution for each l
     Covvar_Est[[l]] <- crossprod(cbind(Re(lambda_hat), Im(lambda_hat)))  # 2B x 2B
     

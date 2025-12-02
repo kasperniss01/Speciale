@@ -11,8 +11,23 @@ sim_crit_draws <- function(covvar, nrep = 1e5) {
   R <- t(chol(covvar))                                
   Z <- matrix(rnorm(m * nrep), m, nrep)
   V <- R %*% Z
-  
+
   Rfast::colMaxs(abs(V), value = TRUE)
+}
+
+sim_crit_draws_alt <- function(all_gamma, nrep = 1e5) {
+  # all_gamma is (T - L) x (2 * B) one row pr. gamma, on col pr. B/Re/Im,{ (T-L) = n }
+  # nrep is number of replications for quantile determination
+  
+  #returns vector of length(nrep) of samples from ||N(0, covvar)||_infty
+  
+  n <- nrow(all_gamma) 
+  
+  Zalt <- matrix(rnorm(n * nrep), nrep, n)/sqrt(n)
+  
+  Valt <- Zalt %*% all_gamma
+  
+  Rfast::rowMaxs(abs(Valt), value = TRUE)
 }
 
 crit_from_draws <- function(draws, alpha) {

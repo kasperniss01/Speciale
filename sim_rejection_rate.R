@@ -170,11 +170,32 @@ sim_rej_rate <- function(Tlen, L, B,
     S_hats[i] <- S_hat
     
     covvar_est <- est$Covvar_Est
+    
+    #browser()
+    all_gamma_hat <- est$all_gamma_hat
+    
+    
+    
     covvar_list[[i]] <- covvar_est
     
-    draws <- sim_crit_draws(covvar_est)
-    crits <- crit_from_draws(draws, alphas)
-    reject[, i] <- (S_hat > crits)
+    #browser()
+    
+    # draws <- sim_crit_draws(covvar_est, nrep = 1e5)
+    #draws1 <- sim_crit_draws(covvar_est, nrep = 1e5)
+    draws_alt <- sim_crit_draws_alt(all_gamma_hat, nrep = 1e5)
+    
+    #browser()
+    
+    #crits <- crit_from_draws(draws, alphas)
+    #crits1 <- crit_from_draws(draws1, alphas)
+    crits_alt <- crit_from_draws(draws_alt, alphas)
+    
+    # (crits - crits_alt %>% abs) %>% max()
+    # (crits - crits1 %>% abs) %>% max()
+    
+    
+    
+    reject[, i] <- (S_hat > crits_alt)
     
     ## if parametric is TRUE
     if (parametric) {
@@ -202,9 +223,14 @@ sim_rej_rate <- function(Tlen, L, B,
       S_parametric_plugins[i] <- S_parametric_plugin
       
       covvar_parametric_plugin <- est$parametric_plugin$Covvar_Est_parametric_plugin
+      all_gamma_parametric_plugin <- est$parametric_plugin$all_gamma_parametric_plugin
+      
       covvar_parametric_plugins_list[[i]] <- covvar_parametric_plugin
       
-      draws_parametric_plugins <- sim_crit_draws(covvar_parametric_plugin)
+      #draws_parametric_plugins <- sim_crit_draws(covvar_parametric_plugin)
+      
+      draws_parametric_plugins <- sim_crit_draws_alt(all_gamma_parametric_plugin)
+      
       crits_parametric_plugins <- crit_from_draws(draws_parametric_plugins, alphas)
       
       reject_parametric_plugins[, i] <- (S_parametric_plugin > crits_parametric_plugins)
@@ -219,9 +245,13 @@ sim_rej_rate <- function(Tlen, L, B,
       S_oracle_plugins[i] <- S_oracle_plugin
       
       covvar_est_oracle_plugin <- est$Covvar_Est_true
+      all_gamma_oracle_plugin <- est$all_gamma_true
+      
       covvar_oracle_plugin_list[[i]] <- covvar_est_oracle_plugin
     
-      draws_oracle_plugin <- sim_crit_draws(covvar_est_oracle_plugin)
+      #draws_oracle_plugin <- sim_crit_draws(covvar_est_oracle_plugin)
+      draws_oracle_plugin <- sim_crit_draws_alt(all_gamma_oracle_plugin)
+      
       crits_oracle_plugin <- crit_from_draws(draws_oracle_plugin, alphas)
       reject_oracle_plugin[, i] <- (S_oracle_plugin > crits_oracle_plugin)
     }
