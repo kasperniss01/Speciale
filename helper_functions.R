@@ -18,9 +18,13 @@ II_l <- function(Tlen, L, l) {
   make_blocks(Tlen, L)[[l]]
 }
 
-### fetch l'th training data according to equation ??
+### fetch l'th training data according to equation 
 II_bar_l <- function(Tlen, L, l, p) {
   idx_eval <- II_l(Tlen, L, l)
+  
+  if (L == 1) { #if no cross-fitting, return whole dataset
+    return(seq_len(Tlen))
+  }
   
   left  <- max(1, min(idx_eval) - p)
   right <- min(Tlen, max(idx_eval) + p)
