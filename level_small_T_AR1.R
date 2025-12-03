@@ -10,16 +10,24 @@ repetitions <- 200
 set.seed(420)
 A <- runif(16, -1, 1) %>% matrix(4,4) %>% round(2)
 
+
 seeds <- 1:200
 
 
-Tlens_pwr <- c(100)
-baseline_gammas <- c(0)
-Bs <- c(10)
+Tlens_pwr <- c(30, 100, 500, 1000)
+baseline_gammas <- c(0, 3, 5)
+Bs <- c(10, 20, 30, 50, 60, 80, 100)
 
 
 for(Tlen in Tlens_pwr){
   for(baseline_gamma in baseline_gammas){
+    
+    if((baseline_gamma %in% c(0,3,5) & Tlen %in% c(30,100)) |
+       (baseline_gamma == 0 & Tlen %in% c(500))
+    ) {
+      next
+    }
+    
     for (B in Bs) {
       
       print(paste0("Tlen = ", Tlen, ", baseline gamma = ", baseline_gamma, ", B = ", B))
@@ -28,6 +36,7 @@ for(Tlen in Tlens_pwr){
       
       Alocal <- A
       Alocal[1,-1] <- gamma*rep(1/sqrt(3), 3)
+      
       
       simulate_temp <- sim_rej_rate(
         Tlen = Tlen,
@@ -60,12 +69,54 @@ for(Tlen in Tlens_pwr){
         sim_rej_obj = simulate_temp
       )
       
-      # saveRDS(sim_temp, 
-      #         file = paste0("datasets/niveau/VAR/grid_Tlen_", Tlen, "_baseline_gamma_", baseline_gamma, "_B_", B, ".rds"))
-      # 
+      saveRDS(sim_temp,
+              file = paste0("datasets/niveau/VAR/grid_Tlen_", Tlen, "_baseline_gamma_", baseline_gamma, "_B_", B, ".rds"))
+
     }
   }
 }
+
+
+
+
+
+
+
+# 0.717
+# 
+# Tlens <- seq(10, 1000, by = 1)
+# gamma0s <- seq(0, 20, by = 0.1)
+# 
+# stationary_vector <- logical(length(Tlens) * length(gamma0s))
+# 
+# for(i in seq_along(Tlens)) {
+#   for(j in seq_along(gamma0s)) {
+#     
+#     gamma_temp <- gamma0s[j] / sqrt(Tlens[i])
+#     
+#     A_temp <- A
+#     A_temp[1,-1] <- gamma_temp*rep(1/sqrt(3), 3)
+#     
+#     stationary_vector[(i-1)*length(gamma0s) + j] <- (max(abs(eigen(A_temp)$values)) < 1)
+#   }
+#}
+# 
+# tibble(
+#   Tlen = rep(Tlens, each = length(gamma0s)),
+#   gamma0 = rep(gamma0s, times = length(Tlens)),
+#   stationary = stationary_vector
+# ) %>% ggplot(aes(x = Tlen, y = gamma0, fill = stationary)) +
+#   geom_tile() +
+#   scale_fill_manual(values = c("white", "grey")) +
+#   labs(title = "Stationarity region for local alternatives in 4D AR(1) process",
+#        x = "Time series length T",
+#        y = expression(gamma[0]),
+#        fill = "Stationary") +
+#   theme_minimal() +
+#   geom_function(fun = function(x) sqrt(x)*0.717, color = "blue", size = 1) 
+# 
+# 0.717*sqrt(40)
+# 
 
 
 
