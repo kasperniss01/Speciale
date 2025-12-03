@@ -171,18 +171,36 @@ sim_rej_rate <- function(Tlen, L, B,
     
     covvar_est <- est$Covvar_Est
     
-    #browser()
     all_gamma_hat <- est$all_gamma_hat
     
     
     
     covvar_list[[i]] <- covvar_est
-    
-    #browser()
+  
     
     # draws <- sim_crit_draws(covvar_est, nrep = 1e5)
     #draws1 <- sim_crit_draws(covvar_est, nrep = 1e5)
-    draws_alt <- sim_crit_draws_alt(all_gamma_hat, nrep = 1e5)
+    draws_alt <- sim_crit_draws_alt2(covvar_est, nrep = 1e5)
+    
+    # 
+    # max(abs(crit_from_draws(sim_crit_draws(covvar_est, nrep = 1e5), alphas) - 
+    #           crit_from_draws(sim_crit_draws_alt(all_gamma_hat, nrep = 1e5), alphas))) 
+    # 
+    # replicate(50, {
+    # max(abs(crit_from_draws(sim_crit_draws_alt(all_gamma_hat, nrep = 1e5), alphas) -
+    #         crit_from_draws(sim_crit_draws_alt(all_gamma_hat, nrep = 1e5), alphas)))}
+    # ) -> remainders1
+    # 
+    # replicate(50, {
+    #   max(abs(crit_from_draws(sim_crit_draws_alt2(covvar_est, nrep = 1e5), alphas) -
+    #           crit_from_draws(sim_crit_draws_alt(all_gamma_hat, nrep = 1e5), alphas))) })  -> remainders2
+    # 
+    # tibble(method = rep(c("alt", "alt2"), each = 50),
+    #        remainders = c(remainders1, remainders2)) %>%
+    #   ggplot(aes(x = remainders, fill = method, color = method)) +
+    #   geom_density(alpha = 0.3)
+
+    
     
     #browser()
     
@@ -229,7 +247,7 @@ sim_rej_rate <- function(Tlen, L, B,
       
       #draws_parametric_plugins <- sim_crit_draws(covvar_parametric_plugin)
       
-      draws_parametric_plugins <- sim_crit_draws_alt(all_gamma_parametric_plugin)
+      draws_parametric_plugins <- sim_crit_draws_alt2(covvar_parametric_plugin)
       
       crits_parametric_plugins <- crit_from_draws(draws_parametric_plugins, alphas)
       
@@ -250,7 +268,7 @@ sim_rej_rate <- function(Tlen, L, B,
       covvar_oracle_plugin_list[[i]] <- covvar_est_oracle_plugin
     
       #draws_oracle_plugin <- sim_crit_draws(covvar_est_oracle_plugin)
-      draws_oracle_plugin <- sim_crit_draws_alt(all_gamma_oracle_plugin)
+      draws_oracle_plugin <- sim_crit_draws_alt2(covvar_est_oracle_plugin)
       
       crits_oracle_plugin <- crit_from_draws(draws_oracle_plugin, alphas)
       reject_oracle_plugin[, i] <- (S_oracle_plugin > crits_oracle_plugin)
@@ -275,7 +293,7 @@ sim_rej_rate <- function(Tlen, L, B,
     covvars <- list(est = covvar_list)
     
     if (parametric) {
-     # browser()
+
       
       rates_parametric <- rowMeans(parametric_reject)
       ses_parametric <- sqrt(rates_parametric * (1 - rates_parametric) / repetitions)
