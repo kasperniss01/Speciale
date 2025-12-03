@@ -116,7 +116,7 @@ estimate_stat <- function(data, L, B,
     resX <- cc_X - phi_hat_mat
     resY <- cc_Y - psi_hat_mat
     
-    browser()
+    # browser()
     lambda_hat <- resX * resY
     
     all_gamma_hat[((l - 1)*(n-1) +1) : (l*(n-1)), ] <- cbind(Re(lambda_hat), Im(lambda_hat))
