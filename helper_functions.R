@@ -45,3 +45,28 @@ get_Y_mat <- function(data) {
   if (length(ycols) == 0) stop("No Y columns found. Provide 'Y' or 'Y1..Yd'.")
   as.matrix(data[, ycols, drop = FALSE])
 }
+
+## combining large objects
+comb_rej_rate_large_obj <- function(...) {
+  # browser()
+  arguments <- list(...)
+  number_dfs <- length(arguments)
+  
+  df <- data.frame()
+  
+  for (i in 1:number_dfs) {
+    arg_i <- arguments[[i]]
+    metadata_i <- arg_i$metadata
+    df_i <- arg_i$sim_rej_obj$rejection_rate_df
+    
+    df_i <- df_i %>% mutate(Tlen = metadata_i$Tlen,
+                            B = metadata_i$B,
+                            baseline_gamma = metadata_i$baseline_gamma,
+                            actual_gamma = metadata_i$actual_gamma,
+                            L = metadata_i$L)
+    
+    df <- bind_rows(df, df_i)
+  }
+  
+  df
+}
