@@ -3,7 +3,7 @@
 ### todo: add docstrings 
 
 ### fitting a lightgbm regression model that defaults to squared-error-loss ###
-fit_lgb <- function(X, y, num_round = 300, params = list(),
+fit_lgb <- function(X, y, num_round = 150, params = list(),
                     objective = "regression") {
   
   # X covariates

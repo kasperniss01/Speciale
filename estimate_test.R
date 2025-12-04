@@ -33,7 +33,7 @@ estimate_stat <- function(data, L, B,
   
   # browser()
   if(is.data.frame(data)) data <- data 
-  else data <- as.data.frame(data)
+  else data <- data.frame(data)
   
   X <- data$X
   Y <- get_Y_mat(data)
@@ -43,7 +43,7 @@ estimate_stat <- function(data, L, B,
   n <- Tlen / L
   d <- ncol(Ymat)
   
-  p <- log(n * L)
+  p <- floor(log(n * L))
   
   Gamma_hat <- true_Gamma <- Gamma_parametric_plugin <- R1 <- R2 <- R3 <- complex(length.out = B)
   

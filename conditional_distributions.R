@@ -298,8 +298,23 @@ char_func_cond_Y_given_X_highdim_mat <- function(A, t, x_t, u, sigma_sq = 1) {
 
 
 ### --------- Stationary variance in VAR(1) process -------- ###
-stationary_covariance <- function(A, Sigma = diag(ncol(A))) {
-  netcontrol::dlyap(t(A), Sigma)
+stationary_covariance <- function(A, Sigma = diag(ncol(A)), maxiter = 1e4) {
+  # netcontrol::dlyap(t(A), Sigma)
+  
+  sum <- matrix(0, nrow = ncol(A), ncol = ncol(A))
+  Ai <- diag(ncol(A))
+  for (i in 0:maxiter) {
+    term <- Ai %*% Sigma %*% t(Ai)
+    sum <- sum + term
+    
+    # early stopping: terms are negligible
+    if (max(abs(term)) < 1e-12) break
+    
+    Ai <- Ai %*% A
+  }
+  print(i)
+  
+  return(sum)
 }
 
 ### equivalent to the sum characterization ###
