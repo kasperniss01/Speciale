@@ -92,7 +92,7 @@ local_alternative_VAR_fixed_B_df <- comb_rej_rate_large_obj(
 )
 
 #full plot for local alternative
-local_alternative_var_fixed_B_full_plot <- local_alternative_VAR_fixed_B_df %>% 
+local_alternative_VAR_fixed_B_full_plot <- local_alternative_VAR_fixed_B_df %>% 
   pivot_longer(cols = c(rate_nonparametric, rate_parametric_plugin, rate_oracle_plugin), 
                values_to = "rate",
                names_to = "method") %>% 
@@ -112,4 +112,40 @@ local_alternative_var_fixed_B_full_plot <- local_alternative_VAR_fixed_B_df %>%
   theme(
     strip.background = element_rect(fill = "white", color = NA)
   )
-local_alternative_var_fixed_B_full_plot
+local_alternative_VAR_fixed_B_full_plot
+
+local_alternative_VAR_fixed_B_alpha_0.05_plot <- local_alternative_VAR_fixed_B_df %>% 
+  filter(alpha <= 0.0475 & alpha <= 0.0525) %>% 
+  pivot_longer(cols = c(rate_nonparametric, rate_parametric_plugin, rate_oracle_plugin), 
+               values_to = "rate",
+               names_to = "method") %>% 
+  ggplot(aes(x = Tlen, y = rate, color = method)) + 
+  geom_line() + 
+  labs(x = "Tlen",
+       y = expression(paste("Estimated rejection rate (", alpha, " = 5%)"))) + 
+  ylim(0, 1) +
+  geom_point(size = 0.5) + 
+  geom_abline(color = "darkgrey", linetype = "dashed") + 
+  facet_wrap(~baseline_gamma,
+             labeller = label_bquote(
+               cols = gamma[0] == .(baseline_gamma) ~ "," ~ B == .(B)
+             )) + 
+  theme_bw() + 
+  theme(strip.background = element_rect(fill = "white", color = NA))
+local_alternative_VAR_fixed_B_alpha_0.05_plot
+
+local_alt_fast_B_alpha_0.05_plot <- local_alternative_VAR_fixed_B_df %>% filter(0.0475 <= alpha & alpha <= 0.0525) %>% 
+  ggplot(aes(x = Tlen, y = rate_nonparametric)) + 
+  geom_line() + 
+  labs(x = "Tlen",
+       y = expression(paste("Estimated rejection rate (", alpha, " = 5%)"))) + 
+  ylim(0, 1) +
+  geom_point(size = 0.5) + 
+  geom_abline(color = "darkgrey", linetype = "dashed") + 
+  facet_wrap(~baseline_gamma,
+             labeller = label_bquote(
+               cols = gamma[0] == .(baseline_gamma) ~ "," ~ B == .(B)
+             )) + 
+  theme_bw() + 
+  theme(strip.background = element_rect(fill = "white", color = NA))
+local_alt_fast_B_alpha_0.05_plot
