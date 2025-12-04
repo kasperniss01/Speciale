@@ -312,7 +312,6 @@ stationary_covariance <- function(A, Sigma = diag(ncol(A)), maxiter = 1e4) {
     
     Ai <- Ai %*% A
   }
-  print(i)
   
   return(sum)
 }
