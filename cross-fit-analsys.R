@@ -125,11 +125,7 @@ for(Tlen in Tlens_pwr){
 }
 
 
-# plotting the result - no cross-fitting
-# no_cross_fit_30 <- readRDS("datasets/niveau/VAR/single_crossfit_Tlen_200_baseline_gamma_0_B_10.rds")
-# no_cross_fit_200 <- readRDS("datasets/niveau/VAR/single_crossfit_Tlen_200_baseline_gamma_0_B_10.rds")
-# no_cross_fit_500 <- readRDS("datasets/niveau/VAR/single_crossfit_Tlen_500_baseline_gamma_0_B_10.rds")
-# no_cross_fit_2000 <- readRDS("datasets/niveau/VAR/single_crossfit_Tlen_2000_baseline_gamma_0_B_10.rds")
+# plotting the result 
 
 
 no_cross_fit_df <- comb_rej_rate_large_obj(
