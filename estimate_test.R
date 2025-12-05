@@ -140,9 +140,9 @@ estimate_stat <- function(data, L, B,
       
       lambda_true <- true_resX * true_resY
       
-      R1 <- R1 + colSums((cc_X - true_phi) * (true_psi - psi_hat_mat))
-      R2 <- R2 + colSums((cc_Y - true_psi) * (true_phi - phi_hat_mat))
-      R3 <- R3 + colSums((true_phi - phi_hat_mat) * (true_psi - psi_hat_mat))
+      R1 <- R1 + colSums((cc_X - true_phi) * (true_psi - psi_hat_mat)) #psi residual
+      R2 <- R2 + colSums((cc_Y - true_psi) * (true_phi - phi_hat_mat)) #phi residual
+      R3 <- R3 + colSums((true_phi - phi_hat_mat) * (true_psi - psi_hat_mat)) #DML led
       
       true_Gamma <- true_Gamma + colSums((cc_X - true_phi) * (cc_Y - true_psi))
       
