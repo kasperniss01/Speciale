@@ -15,20 +15,23 @@ seeds <- 1:200
 
 
 Tlens_pwr <- c(30, 100, 500, 1000)
-baseline_gammas <- c(0, 3, 5)
-Bs <- c(10, 20, 30, 50, 60, 80, 100)
+baseline_gammas <- c(0, 5)
+Bs <- c(6, 10, 30, 50, 60, 100)
 
 
 for(Tlen in Tlens_pwr){
   for(baseline_gamma in baseline_gammas){
     
-    if((baseline_gamma %in% c(0,3,5) & Tlen %in% c(30,100)) |
-       (baseline_gamma == 0 & Tlen %in% c(500))
-    ) {
-      next
-    }
+    if(Tlen == 30 & baseline_gamma == 5) next
     
     for (B in Bs) {
+      
+    
+      if((baseline_gamma == 0 & B == 10)) {
+        next
+      }
+      
+      
       
       print(paste0("Tlen = ", Tlen, ", baseline gamma = ", baseline_gamma, ", B = ", B))
       
@@ -69,8 +72,10 @@ for(Tlen in Tlens_pwr){
         sim_rej_obj = simulate_temp
       )
       
-      saveRDS(sim_temp,
-              file = paste0("datasets/niveau/VAR/grid_Tlen_", Tlen, "_baseline_gamma_", baseline_gamma, "_B_", B, ".rds"))
+      
+      saveRDS(sim_temp, 
+              file = paste0("datasets/new_sims/VAR/L_", L, "_Tlen_", Tlen, "_baseline_gamma_", baseline_gamma, "_B_", B, ".rds"))
+      
 
     }
   }
