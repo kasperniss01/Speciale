@@ -4,4 +4,6 @@
 .Ruserdata
 .DS_Store
 *.log
+*.eps
+*.png
 Rplots.pdf
