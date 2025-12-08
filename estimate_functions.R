@@ -11,7 +11,7 @@ fit_lgb <- function(X, y, num_round = 150, params = list(),
   # objective is what kind of regression to do
   
   X_mat <- as.matrix(X)
-  n <- nrow(X_mat) # number of features
+  n <- nrow(X_mat) # number of observations
   
   dtrain <- lgb.Dataset(data = as.matrix(X), label = y)
   
