@@ -24,11 +24,11 @@ comb_rej_rate_large_obj <- function(...) {
 
 
 Importance_of_B_VAR1 <- comb_rej_rate_large_obj(
- readRDS("datasets/new_sims/VAR/L_10_Tlen_30_baseline_gamma_0_B_6.rds"),
- readRDS("datasets/new_sims/VAR/L_10_Tlen_30_B_10.rds"),
- readRDS("datasets/new_sims/VAR/L_10_Tlen_30_baseline_gamma_0_B_30.rds"),
- readRDS("datasets/new_sims/VAR/L_10_Tlen_30_baseline_gamma_0_B_60.rds"),
- readRDS("datasets/new_sims/VAR/L_10_Tlen_30_baseline_gamma_0_B_100.rds"),
+ #readRDS("datasets/new_sims/VAR/L_10_Tlen_30_baseline_gamma_0_B_6.rds"),
+ #readRDS("datasets/new_sims/VAR/L_10_Tlen_30_B_10.rds"),
+ # readRDS("datasets/new_sims/VAR/L_10_Tlen_30_baseline_gamma_0_B_30.rds"),
+ # readRDS("datasets/new_sims/VAR/L_10_Tlen_30_baseline_gamma_0_B_60.rds"),
+ # readRDS("datasets/new_sims/VAR/L_10_Tlen_30_baseline_gamma_0_B_100.rds"),
  readRDS("datasets/new_sims/VAR/L_10_Tlen_100_baseline_gamma_0_B_6.rds"),
  readRDS("datasets/new_sims/VAR/L_10_Tlen_100_B_10.rds"),
  readRDS("datasets/new_sims/VAR/L_10_Tlen_100_baseline_gamma_0_B_30.rds"),
@@ -57,7 +57,7 @@ Importance_of_B_VAR1 <- comb_rej_rate_large_obj(
  readRDS("datasets/new_sims/VAR/L_10_Tlen_1000_baseline_gamma_5_B_6.rds"),
  readRDS("datasets/new_sims/VAR/L_10_Tlen_1000_baseline_gamma_5_B_10.rds"),
  readRDS("datasets/new_sims/VAR/L_10_Tlen_1000_baseline_gamma_5_B_30.rds"),
- readRDS("datasets/new_sims/VAR/L_10_Tlen_1000_baseline_gamma_5_B_60.rds")
+ readRDS("datasets/new_sims/VAR/L_10_Tlen_1000_baseline_gamma_5_B_60.rds"),
  readRDS("datasets/new_sims/VAR/L_10_Tlen_1000_baseline_gamma_5_B_100.rds")
 )
 
@@ -76,40 +76,88 @@ Importance_of_B_VAR1 %>%
   facet_grid(
     rows = vars(baseline_gamma),
     cols = vars(Tlen),
-    labeller = labeller(
-      baseline_gamma = function(x) paste0("Baseline gamma: ", x),
-      Tlen = function(x) paste0("Time series length: ", x)
+    labeller = label_bquote(
+      rows = gamma == .(baseline_gamma) / sqrt(T), 
+      cols = T == .(Tlen)             
     )
   ) +
+  xlab(expression(paste("Significance level (", alpha, ")"))) +
+  ylab("Rejection rate") +
   geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "grey") +
-  theme_minimal() +
-  coord_fixed() |
+  theme_bw() +
+  coord_fixed() +
+  theme(
+    legend.position = "bottom",
+    strip.background = element_rect(fill = "white", color  = NA),
+    axis.text.x = element_text(
+      angle = 30,      # angle in degrees
+      hjust = 1,       # horizontal justification
+      vjust = 1        # vertical justification
+    )
+  )
+
+ggsave("images/Importance_of_B_RejRate.eps", 
+       width = 500, 
+       height = 380,
+       units = "px",
+       scale = 4
+       )
+
 Importance_of_B_VAR1 %>% 
-  mutate(lab = "Among all alpha") %>%
+  mutate(lab = "all") %>%
   bind_rows(
     Importance_of_B_VAR1 %>%
       filter(alpha <= 0.10) %>%
-      mutate(lab = "Among alpha <= 0.10")
+      mutate(lab = "small")
   ) %>%
   mutate(diff = rate_nonparametric - alpha) %>%
+  mutate(
+    baseline_gamma = ifelse( baseline_gamma == "5", "5/sqrt(T)", baseline_gamma)
+  ) %>%
   group_by(Tlen, baseline_gamma, B, lab) %>%
   summarize(max_diff = max(diff)) %>%
-  mutate(baseline_gamma = factor(baseline_gamma)) %>% 
+  mutate(
+    baseline_gamma = factor(baseline_gamma),
+    # lab as plotmath strings:
+    lab = ifelse(
+      lab == "all",
+      "paste('Max difference over all ', alpha)",
+      "paste('Max difference over ', alpha<= 0.10)"
+    )
+  ) %>% 
   ggplot(aes(x = B, y = max_diff, color = baseline_gamma)) +
   geom_point() +
   geom_line() +
   facet_grid(
     cols = vars(Tlen), 
     rows = vars(lab),
-    labeller = labeller(
-      Tlen = function(x) paste0("Time series length: ", x)
+    labeller = 
+      labeller(
+      Tlen = function(x) paste0("T = ", x),
+      lab = label_parsed
     )) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "grey") +
   theme_bw() +
-  ylab("Maximum difference between rejection rate and alpha")
+  theme(legend.position = "bottom",
+        strip.background = element_rect(fill = "white", color = NA),
+        ) +
+  ylab("Maximum difference between rejection rate and alpha") +
+  scale_color_manual(
+    name   = expression(gamma),
+    values = c("0" = "#F8766D", "5/sqrt(T)" = "#00BFC4"),
+    labels = c(expression(0), expression(5/sqrt(T)))
+  )
 
 
 
+ ggsave("images/Importance_of_B_MaxDif.eps", 
+        width = 500, 
+        height = 400,
+        units = "px",
+        scale = 4
+ )
+ 
+ 
 
 Importance_of_B_VAR1 %>% 
   filter(alpha >= 0.049, alpha <= 0.051) %>%

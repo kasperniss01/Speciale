@@ -3,7 +3,7 @@ source("sim_rejection_rate.R")
 
 #### Run algorithm on 4D AR1 process, under local alternatives, including H0.
 
-# B_func <- function(T) floor(T^(1/4))
+B_func <- function(T) ceiling(T^(49/100))
 L = 10
 repetitions <- 200
 
@@ -14,26 +14,16 @@ A <- runif(16, -1, 1) %>% matrix(4,4) %>% round(2)
 seeds <- 1:200
 
 
-Tlens_pwr <- c(30, 100, 500, 1000)
-baseline_gammas <- c(0, 5)
-Bs <- c(6, 10, 30, 50, 60, 100)
+Tlens_pwr <- c(200, 300, 400, 700, 1500, 3000, 5000, 7500, 10000, 15000)
+baseline_gammas <- c(0)
+Bs <- B_func(Tlens_pwr)
 
 
 for(Tlen in Tlens_pwr){
   for(baseline_gamma in baseline_gammas){
-    
-    if(Tlen == 30 & baseline_gamma == 5) next
-    
-    for (B in Bs) {
+   # for (B in Bs) {
       
-    
-      if((baseline_gamma == 0 & B == 10)) {
-        next
-      }
-      
-      
-      
-      print(paste0("Tlen = ", Tlen, ", baseline gamma = ", baseline_gamma, ", B = ", B))
+      print(paste0("Tlen = ", Tlen, ", baseline gamma = ", baseline_gamma, ", B = ", B_func(Tlen)))
       
       gamma = baseline_gamma / sqrt(Tlen)
       
@@ -44,7 +34,7 @@ for(Tlen in Tlens_pwr){
       simulate_temp <- sim_rej_rate(
         Tlen = Tlen,
         L = L,
-        B = B,
+        B = B_func(Tlen),
         parameters = list(
           A_matrix = Alocal
         ),
@@ -65,7 +55,7 @@ for(Tlen in Tlens_pwr){
           baseline_gamma = baseline_gamma,
           actual_gamma = gamma,
           A_matrix = Alocal,
-          B = B,
+          B = B_func(Tlen),
           L = L,
           repetitions = repetitions
         ),
@@ -74,10 +64,11 @@ for(Tlen in Tlens_pwr){
       
       
       saveRDS(sim_temp, 
-              file = paste0("datasets/new_sims/VAR/L_", L, "_Tlen_", Tlen, "_baseline_gamma_", baseline_gamma, "_B_", B, ".rds"))
+              file = paste0("datasets/new_sims/VAR/L_", L, "_Tlen_", Tlen, "_baseline_gamma_", 
+                            baseline_gamma, "_B_", B_func(Tlen), ".rds"))
       
 
-    }
+ #   }
   }
 }
 
