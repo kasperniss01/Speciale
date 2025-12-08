@@ -38,7 +38,7 @@ asses_cross_fit_plot <- assess_cross_fit_df %>%
   facet_grid(
     crossfit ~ Tlen + B + baseline_gamma,
     labeller = label_bquote(
-      cols = Tlen == .(Tlen) ~ "," ~ B == .(B)
+      cols = T == .(Tlen) ~ "," ~ B == .(B)
     )
   ) +
   coord_fixed() +
@@ -283,7 +283,7 @@ local_alternative_VAR_increasing_B_alpha_0.05_plot <- local_alternative_VAR_incr
   mutate(Method = ifelse(Method == "nonparametric", "Nonparametric", Method)) %>% 
   ggplot(aes(x = Tlen, y = rate, color = Method)) + 
   geom_line() + 
-  labs(x = "Tlen",
+  labs(x = "T",
        y = expression(paste("Estimated rejection rate (", alpha, " = 5%)"))) + 
   ylim(0, 1) +
   geom_point(size = 0.5) + 
@@ -304,5 +304,60 @@ ggsave("images/local_alternatives_increasing_B_VAR.eps",
        scale = 2.5,
        plot = local_alternative_VAR_increasing_B_alpha_0.05_plot)
 
+## combining fixed B and increasing B local alternatives ##
+local_alt_all_B <- bind_rows(
+  local_alternative_VAR_increasing_B_df %>% 
+    filter(0.0475 <= alpha & alpha <= 0.0525) %>% 
+    pivot_longer(cols = c(rate_nonparametric, rate_parametric_plugin, rate_oracle_plugin),
+                 values_to = "rate",
+                 names_to = "Method",
+                 names_prefix = "rate_") %>% 
+    mutate(Method = ifelse(Method == "oracle_plugin", "Oracle", Method)) %>% 
+    mutate(Method = ifelse(Method == "parametric_plugin", "Parametric", Method)) %>% 
+    mutate(Method = ifelse(Method == "nonparametric", "Nonparametric", Method)) %>% 
+    mutate(B_scheme = "increasing"),
+  local_alternative_VAR_fixed_B_df %>% 
+    filter(0.0475 <= alpha & alpha <= 0.0525) %>% 
+    pivot_longer(cols = c(rate_nonparametric, rate_parametric_plugin, rate_oracle_plugin),
+                 values_to = "rate",
+                 names_to = "Method",
+                 names_prefix = "rate_") %>% 
+    mutate(Method = ifelse(Method == "oracle_plugin", "Oracle", Method)) %>% 
+    mutate(Method = ifelse(Method == "parametric_plugin", "Parametric", Method)) %>% 
+    mutate(Method = ifelse(Method == "nonparametric", "Nonparametric", Method)) %>% 
+    mutate(B_scheme = "fixed")
+) %>% mutate(B_scheme = factor(B_scheme, levels = c("increasing", "fixed")))
 
+local_alternatives_combined_plot <- local_alt_all_B %>% 
+  ggplot(aes(x = Tlen, y = rate, color = Method, linetype = B_scheme)) + 
+  geom_line() + 
+  labs(x = "T",
+       y = expression(paste("Estimated rejection rate (", alpha, " = 5%)"))) + 
+  ylim(0, 1) +
+  geom_point(size = 0.5) + 
+  geom_abline(color = "darkgrey", linetype = "dashed") + 
+  facet_wrap(~baseline_gamma,
+             labeller = label_bquote(
+               cols = gamma[0] == .(baseline_gamma) 
+             )) + 
+  theme_bw() + 
+  theme(strip.background = element_rect(fill = "white", color = NA),
+        legend.position = "bottom",
+        legend.box = "vertical",
+        legend.spacing.y = unit(-0.5, "lines"),
+        legend.box.spacing = unit(0, "lines")) + 
+  scale_linetype_manual(
+    name = expression(B(T)),
+    values = c("increasing" = "solid", "fixed" = "dashed"),
+    labels = c(latex2exp::TeX('$\\lceil T^{49/100} \\rceil$'), 10)
+  )
+local_alternatives_combined_plot
+
+
+ggsave("images/local_alternatives_combined_B.eps",
+       width = 500,
+       height = 350,
+       units = "px",
+       scale = 4,
+       plot = local_alternatives_combined_plot)
 
