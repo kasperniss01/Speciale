@@ -20,7 +20,7 @@ library(vars)
 
 #only for AR1 process, consider changing data-generating process to be argument so it works in general
 sim_rej_rate <- function(Tlen, L, B,
-                         DGP = c("AR1", "CIR", "IID"),
+                         DGP = c("AR1","AR1_centered_exp", "AR1_discrete","CIR", "IID"),
                          parameters = list(), 
                          # A_matrix, 
                          alphas,
@@ -39,7 +39,7 @@ sim_rej_rate <- function(Tlen, L, B,
   # true_psi <- function(x, mu, t) remainder_true_ccfs$true_psi(x, mu, A, t)
   # these are seemingly not used?
   
-  if (DGP == "AR1") {
+  if (DGP == "AR1" || DGP == "AR1_centered_exp" || DGP == "AR1_discrete") {
     if (is.null(parameters$A_matrix)) stop("Must provide A_matrix for AR1")
     else A_matrix = parameters$A_matrix
     
@@ -115,7 +115,27 @@ sim_rej_rate <- function(Tlen, L, B,
       
       
       data <- simulate_AR_process(Tlen, A_matrix, d = d, verbose = verbose)
-      }
+    }
+    
+    if (DGP == "AR1_centered_exp") {
+      
+      
+      if(!is.null(random_seeds) && length(random_seeds) == repetitions) set.seed(random_seeds[i])
+      
+      
+      data <- simulate_AR_process(Tlen, A_matrix, d = d, verbose = verbose, different_noiseprocess = function(n) {rexp(n) - 1})
+    }
+    if (DGP == "AR1_discrete") {
+      
+      
+      if(!is.null(random_seeds) && length(random_seeds) == repetitions) set.seed(random_seeds[i])
+      
+      
+      data <- simulate_AR_process(Tlen, A_matrix, d = d, verbose = verbose, different_noiseprocess = function(n) {sample(c(-1/3,3), n, replace = TRUE, 
+                                                                                                                         prob = c(0.9, 0.1))})
+    }
+    
+    
     if (DGP == "CIR") {
       
       if(!is.null(random_seeds) && length(random_seeds) == repetitions) set.seed(random_seeds[i])

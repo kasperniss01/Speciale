@@ -16,6 +16,7 @@ simulate_AR_process <- function(Tlen,
                                 Z0 = MASS::mvrnorm(n = 1, 
                                                    mu = rep(0, d + 1), 
                                                    Sigma = stationary_covariance(A, Sigma)),
+                                different_noiseprocess = NULL,
                                 # Z0 = c(0, rep(0, d)), #initial value of process
                                 verbose = FALSE 
 ) {
@@ -32,20 +33,30 @@ simulate_AR_process <- function(Tlen,
   if (verbose) {
     if (all(A[1, -1] == 0)) cat("simulating under the hypothesis \n")
   }
-  # browser()
+  
+  
+  
+  
   Z <- matrix(nrow = Tlen, ncol = d + 1) 
   Z[1, ] <- Z0
   
+  
+  if(is.null(different_noiseprocess)) {
+    
   #create matrix used for iid noise
   R <- chol(Sigma)
-  
   #create matrix with gamma parameter - only works in Y 1D case right now
   # A[1, 2] <- gamma
-  
   #loop through time t
   for (t in 2:Tlen) {
     eps <- t(R) %*% rnorm(d + 1)
     Z[t, ] <- intercept + A %*% Z[t - 1, ] + eps
+  }
+  } else {
+    for (t in 2:Tlen) {
+      eps <- different_noiseprocess(d+1)
+      Z[t, ] <- intercept + A %*% Z[t - 1, ] + eps
+    } 
   }
   
   #rename columns
