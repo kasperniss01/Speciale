@@ -46,7 +46,7 @@ get_Y_mat <- function(data) {
   as.matrix(data[, ycols, drop = FALSE])
 }
 
-## combining large objects
+## combining large objects from sim_rej_rate
 comb_rej_rate_large_obj <- function(...) {
   # browser()
   arguments <- list(...)
@@ -69,4 +69,37 @@ comb_rej_rate_large_obj <- function(...) {
   }
   
   df
+}
+
+## ggplot version of the multivariate time series plot
+make_ts_plot <- function(dat, title) {
+  df <- as.data.frame(dat)
+  df$Time <- seq_len(nrow(df))
+  
+  long <- pivot_longer(df, cols = -Time,
+                       names_to = "series", values_to = "value")
+  
+  long$series <- factor(
+    long$series,
+    levels = c("X", "Y1", "Y2", "Y3"),
+    labels = c("X", "Y^1", "Y^2", "Y^3")
+  )
+  
+  ggplot(long, aes(x = Time, y = value)) +
+    geom_line() +
+    facet_grid(
+      series ~ ., 
+      scales = "free_y", 
+      switch = "y",
+      labeller = label_parsed       # <- parse "Y^1" etc as expressions
+    ) +
+    labs(x = "Time", y = NULL, title = title) +
+    theme_bw() +
+    theme(
+      strip.placement = "outside",
+      strip.background = element_blank(),
+      strip.text.y.left = element_text(angle = 0),
+      plot.title = element_text(hjust = 0.5),
+      panel.spacing.y = unit(0.15, "lines")
+    )
 }

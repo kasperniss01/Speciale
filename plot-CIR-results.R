@@ -84,8 +84,9 @@ local_alternative_CIR_increasing_B_full_plot <- local_alternative_CIR_increasing
   mutate(Method = ifelse(Method == "oracle_plugin", "Oracle", Method)) %>% 
   mutate(Method = ifelse(Method == "parametric_plugin", "Parametric", Method)) %>% 
   mutate(Method = ifelse(Method == "nonparametric", "Nonparametric", Method)) %>% 
-  ggplot(aes(x = alpha, y = rate, color = Method)) + 
+  ggplot(aes(x = alpha, y = rate)) + 
   geom_line() + 
+  coord_fixed() + 
   geom_abline(color = "darkgrey", linetype = "dashed") + 
   labs(
     x = expression(paste("Significance level (", alpha, ")")),
@@ -98,9 +99,22 @@ local_alternative_CIR_increasing_B_full_plot <- local_alternative_CIR_increasing
              )) + 
   theme_bw() + 
   theme(
+    axis.text.x = element_text(
+      angle = 30, 
+      vjust = 1,
+      hjust = 1
+    ),
     strip.background = element_rect(fill = "white", color = NA),
     legend.position = "bottom")
 local_alternative_CIR_increasing_B_full_plot
+
+### find størrelser der passer ##
+ggsave("images/CIR_power_full_plot.eps",
+       width = 500,
+       height = 500,
+       units = "px",
+       scale = 4,
+       plot = local_alternative_CIR_increasing_B_full_plot)
 
 local_alternative_CIR_increasing_B_alpha_0.05_plot <- local_alternative_CIR_increasing_B_df %>% 
   filter(0.0475 <= alpha & alpha <= 0.0525) %>% 
@@ -113,7 +127,7 @@ local_alternative_CIR_increasing_B_alpha_0.05_plot <- local_alternative_CIR_incr
   mutate(Method = ifelse(Method == "nonparametric", "Nonparametric", Method)) %>% 
   ggplot(aes(x = Tlen, y = rate)) + 
   geom_line() + 
-  labs(x = "Tlen",
+  labs(x = expression(paste(T)),
        y = expression(paste("Estimated rejection rate (", alpha, " = 5%)"))) + 
   ylim(0, 1) +
   geom_point(size = 0.5) + 
