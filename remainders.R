@@ -84,100 +84,69 @@ remainder_df_long <- remainder_df %>%
     cols = c(R1, R2, R3),
     names_to = "remainder",
     values_to = "value"
-  ) %>% 
-  filter(L == 10) #only look at cross-fitting
+  )
 
 remainder_df_long <- remainder_df_long %>% 
   mutate(scaled_value = sqrt(log(Tlen)) * value,
          Tlen_f = factor(Tlen))
 
-initial_values <- remainder_df_long %>% 
-  filter(Tlen == 20) %>% 
-  dplyr::select(-c(Tlen, S, S_hat)) %>% 
-  rename(value_init = value) 
-  
-remainder_same_scale_df <- remainder_df_long %>% 
-  full_join(initial_values, by = c("rep", "L", "remainder")) %>% 
-  mutate(value = value/value_init)
+remainder_mean <- remainder_df_long %>% 
+  group_by(L, remainder, Tlen) %>% 
+  summarise(mean_scaled_value = mean(scaled_value),
+            mean_value = mean(value))
 
+remainder_labs <- as_labeller(
+  c(
+    R1 = "max[b%in%group('[',B,']')]~sqrt(T~log(T))~group('|',R[1](b),'|')",
+    R2 = "max[b%in%group('[',B,']')]~sqrt(T~log(T))~group('|',R[2](b),'|')",
+    R3 = "max[b%in%group('[',B,']')]~sqrt(T~log(T))~group('|',R[3](b),'|')"
+  ),
+  label_parsed
+)
 
+# Row labels:  L = 1, L = 10
+L_labs <- function(x) paste0("L = ", x)
 
-remainder_summary <- remainder_df_long %>%
-  group_by(Tlen, L, remainder) %>%
-  summarize(
-    mean_value = mean(scaled_value),
-    .groups = "drop") %>% 
-  mutate(Tlen_f = factor(Tlen))
-
-ggplot() +
-  # violins of blown-up remainders at each Tlen
-  geom_violin(
-    data = remainder_df_long,
-    aes(x = Tlen, y = scaled_value, group = Tlen_f),
-    fill = "grey80",
-    color = "grey60",
-    alpha = 0.7
-  ) +
-  # mean curve over Tlen (inside each facet)
-  geom_line(
-    data = remainder_summary,
-    aes(x = Tlen, y = mean_value, group = 1),
-    color = "red",
-    linewidth = 0.9,
-    inherit.aes = FALSE
-  ) +
-  geom_point(
-    data = remainder_summary,
-    aes(x = Tlen, y = mean_value),
-    color = "red",
-    size = 1.8,
-    inherit.aes = FALSE
-  ) +
-  facet_wrap(~remainder, labeller = label_both,
-             scales = "free") +
-  labs(
-    x = "T (chain length)",
-    y = "Scaled remainder: R_k * sqrt(log T)",
-    title = "Blown-up remainders with violin distributions over T",
-    subtitle = "Violin = distribution over reps; red line = Monte Carlo mean"
-  ) +
-  theme_minimal() +
-  theme(
-    axis.text.x = element_text(angle = 45, hjust = 1)
-  )
-
-
-ggplot() +
-  # all individual rep curves (grey, transparent)
+#fully scaled remainder
+remainder_plot <- ggplot() + 
+  # 200 grey lines = individual replications
   geom_line(
     data = remainder_df_long,
-    aes(x = Tlen, y = scaled_value, group = interaction(rep, remainder)),
-    alpha = 0.5,
-    color = "grey50"
+    aes(x = Tlen, y = scaled_value, group = rep),
+    alpha = 1,
+    color = "grey85",
+    linewidth = 0.2
   ) +
-  # mean over reps, colored by remainder
+  # Red line = mean across replications
   geom_line(
-    data = remainder_summary,
-    aes(x = Tlen, y = mean_value, color = remainder),
-    linewidth = 0.5
+    data = remainder_mean,
+    aes(x = Tlen, y = mean_scaled_value),
+    color = "red",
+    linewidth = 0.7
   ) +
-  scale_x_log10() +  # optional but nice here
-  facet_wrap(~ L, labeller = label_both) +
   labs(
-    x = "T (chain length)",
-    y = "Remainder value",
-    color = "Remainder",
-    title = "Remainders R1, R2, R3 vs chain length",
-    # subtitle = "Thin lines: individual reps, thick lines: Monte Carlo mean"
+    x = expression(T),
+    y = "Value"
+  ) + 
+  ylim(0, 1.5) + 
+  facet_grid(
+    L ~ remainder,
+    labeller = labeller(
+      L        = L_labs,
+      remainder = remainder_labs
+    )
   ) +
-  theme_bw()
+  theme_bw() +
+  theme(strip.background = element_rect(fill = "white", color = NA))
+remainder_plot
+
+ggsave("images/remainder_plot.eps",
+       width = 500,
+       height = 300,
+       units = "px",
+       scale = 4,
+       remainder_plot)
 
 
 
 
-remainder_df_long %>% filter(Tlen == 50, L == 1) %>% 
-  ggplot(aes(x = scaled_value)) + 
-  # xlim(0, 1) + 
-  geom_histogram(color = "white") + 
-  facet_wrap(~remainder + Tlen, 
-             labeller = labeller(Tlen = function(x) paste0("Tlen = ", x)))
