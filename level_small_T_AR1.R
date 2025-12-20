@@ -1,4 +1,3 @@
-rm(list = ls())
 source("sim_rejection_rate.R")
 
 #### Run algorithm on 4D AR1 process, under local alternatives, including H0.
@@ -14,8 +13,9 @@ A <- runif(16, -1, 1) %>% matrix(4,4) %>% round(2)
 seeds <- 1:200
 
 
-Tlens_pwr <- c(200, 300, 400, 700, 1500, 3000, 5000, 7500, 10000, 15000)
-baseline_gammas <- c(0)
+Tlens_pwr <- c(1000)
+#baseline_gammas <- c(0, 3, 5, 10, 15)
+baseline_gammas <- 0
 Bs <- B_func(Tlens_pwr)
 
 
@@ -39,6 +39,7 @@ for(Tlen in Tlens_pwr){
           A_matrix = Alocal
         ),
         alphas = seq(0.005, 1, 0.005),
+        DGP = "AR1_centered_exp",
         remainder_true_ccfs = list(
           true_phi = function(x, u, A) char_func_cond_X_next_given_X_previous_mat(A, x, u),
           true_psi = function(x, u, A, t) {char_func_cond_Y_given_X_highdim_mat(A, t, x, u)}
@@ -47,6 +48,7 @@ for(Tlen in Tlens_pwr){
         repetitions = repetitions,
         random_seeds = seeds
       )
+      
       
       
       sim_temp <- list(
@@ -64,7 +66,7 @@ for(Tlen in Tlens_pwr){
       
       
       saveRDS(sim_temp, 
-              file = paste0("datasets/new_sims/VAR/L_", L, "_Tlen_", Tlen, "_baseline_gamma_", 
+              file = paste0("datasets/new_sims/VAR_EXP/including_misspecy_para_L_", L, "_Tlen_", Tlen, "_baseline_gamma_", 
                             baseline_gamma, "_B_", B_func(Tlen), ".rds"))
       
 
@@ -74,7 +76,9 @@ for(Tlen in Tlens_pwr){
 
 
 
+simulate_temp$data[[1]]
 
+sim_temp$metadata
 
 
 

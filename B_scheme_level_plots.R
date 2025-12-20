@@ -26,8 +26,13 @@ level_analysis_B_scheme %>%
     names_prefix = "rate_"
   ) %>% 
   filter(Method != "parametric") %>% 
-  filter(Method == "nonparametric") %>%
-  ggplot(aes(x = alpha, y = rate)) +
+  mutate(Method = case_when(
+    Method == "nonparametric" ~ "Nonparametric",
+    Method == "parametric_plugin" ~ "Parametric",
+    Method == "oracle_plugin" ~ "Oracle"
+  )) %>%
+  #filter(Method == "nonparametric") %>%
+  ggplot(aes(x = alpha, y = rate, color = Method)) +
   geom_line() +
   geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "grey") +
   facet_wrap(vars(Tlen, B), ncol = 4,
@@ -54,10 +59,9 @@ level_analysis_B_scheme %>%
 
 
 
-
 ggsave("images/Large_level_B_scheme_VAR.eps", 
        width = 500, 
-       height = 450,
+       height = 500,
        units = "px",
        scale = 4
 )
@@ -65,4 +69,26 @@ ggsave("images/Large_level_B_scheme_VAR.eps",
 
 
 
+
+level_analysis_B_scheme %>% 
+  filter(alpha <= 0.051, alpha >= 0.049) %>% mutate(
+    across(starts_with("se"), ~ . * 1.96) # 95% CI
+  ) %>% 
+  rename_with(
+    ~ gsub("se_", "ci_", .x)
+  ) %>% 
+ ## calculate confidence intervals, centered about all that starts with rate, that are plus/minus the ci_ prefix's
+  mutate(
+    ci_lower_nonparametric = rate_nonparametric - ci_nonparametric,
+    ci_upper_nonparametric = rate_nonparametric + ci_nonparametric,
+    ci_lower_parametric_plugin = rate_parametric_plugin - ci_parametric_plugin,
+    ci_upper_parametric_plugin = rate_parametric_plugin + ci_parametric_plugin,
+    ci_lower_oracle_plugin = rate_oracle_plugin - ci_oracle_plugin,
+    ci_upper_oracle_plugin = rate_oracle_plugin + ci_oracle_plugin
+  ) %>% 
+  dplyr::select(
+    Tlen, B, starts_with("rate_"), starts_with("ci_")
+  ) %>% mutate(
+    across(starts_with("ci_"), ~ round(., 3)) #clip to [0,1]
+  )
 
