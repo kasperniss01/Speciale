@@ -1,11 +1,9 @@
-### document for simulating rejection rate 
-### right now only works for 2D-AR(1) processes!!!
+### document for simulating rejection rate over multiple runs
 
-source("simulate_AR_process.R") #this is needed
-source("estimate_test.R") #this is needed
-source("sim_crit_value.R") #this is needed
-source("oracle_statistic.R") #don't think this is needed
-source("conditional_distributions.R") #this is needed
+source("simulate_AR_process.R") 
+source("estimate_test.R") 
+source("sim_crit_value.R") 
+source("conditional_distributions.R") 
 source("simulate_SDE.R")
 source("CIR_drift_diffusion.R")
 source("simulate_parameters.R")
@@ -18,7 +16,6 @@ library(vars)
 # fix terminology and everything with AR1 vs CIR and things about A_matrix, 
 # true_CCFS and parametric stuff...
 
-#only for AR1 process, consider changing data-generating process to be argument so it works in general
 sim_rej_rate <- function(Tlen, L, B,
                          DGP = c("AR1","AR1_centered_exp", "AR1_discrete","CIR", "IID"),
                          parameters = list(), 
@@ -29,15 +26,8 @@ sim_rej_rate <- function(Tlen, L, B,
                          parametric = FALSE, 
                          verbose = FALSE,
                          random_seeds = NULL) {
-
-  # browser()
   
   DGP <- match.arg(DGP)
-  
-  # browser()
-  # true_phi <- function(x, mu) remainder_true_ccfs$true_phi(x, mu, A)
-  # true_psi <- function(x, mu, t) remainder_true_ccfs$true_psi(x, mu, A, t)
-  # these are seemingly not used?
   
   if (DGP == "AR1" || DGP == "AR1_centered_exp" || DGP == "AR1_discrete") {
     if (is.null(parameters$A_matrix)) stop("Must provide A_matrix for AR1")
@@ -156,9 +146,8 @@ sim_rej_rate <- function(Tlen, L, B,
     
     data_list[[i]] <- data
     
-    # browser()
-    
     # new mu and nu for each data replication
+    # if they are to be the same across everything, see above
     
     if(!is.null(random_seeds) && length(random_seeds) == repetitions) set.seed(random_seeds[i])
     mu <- matrix(rnorm(B), ncol = 1)
@@ -197,40 +186,16 @@ sim_rej_rate <- function(Tlen, L, B,
     
     covvar_list[[i]] <- covvar_est
   
+    #multiple ways to draw critical values. Right now we use the method based
+    # on the eigen decomposition somehow
     
     # draws <- sim_crit_draws(covvar_est, nrep = 1e5)
     #draws1 <- sim_crit_draws(covvar_est, nrep = 1e5)
     draws_alt <- sim_crit_draws_alt2(covvar_est, nrep = 1e5)
     
-    # 
-    # max(abs(crit_from_draws(sim_crit_draws(covvar_est, nrep = 1e5), alphas) - 
-    #           crit_from_draws(sim_crit_draws_alt(all_gamma_hat, nrep = 1e5), alphas))) 
-    # 
-    # replicate(50, {
-    # max(abs(crit_from_draws(sim_crit_draws_alt(all_gamma_hat, nrep = 1e5), alphas) -
-    #         crit_from_draws(sim_crit_draws_alt(all_gamma_hat, nrep = 1e5), alphas)))}
-    # ) -> remainders1
-    # 
-    # replicate(50, {
-    #   max(abs(crit_from_draws(sim_crit_draws_alt2(covvar_est, nrep = 1e5), alphas) -
-    #           crit_from_draws(sim_crit_draws_alt(all_gamma_hat, nrep = 1e5), alphas))) })  -> remainders2
-    # 
-    # tibble(method = rep(c("alt", "alt2"), each = 50),
-    #        remainders = c(remainders1, remainders2)) %>%
-    #   ggplot(aes(x = remainders, fill = method, color = method)) +
-    #   geom_density(alpha = 0.3)
-
-    
-    
-    #browser()
-    
     #crits <- crit_from_draws(draws, alphas)
     #crits1 <- crit_from_draws(draws1, alphas)
     crits_alt <- crit_from_draws(draws_alt, alphas)
-    
-    # (crits - crits_alt %>% abs) %>% max()
-    # (crits - crits1 %>% abs) %>% max()
-    
     
     
     reject[, i] <- (S_hat > crits_alt)
@@ -254,8 +219,6 @@ sim_rej_rate <- function(Tlen, L, B,
       # Vectorized rejection test
       parametric_reject[, i] <- colSums(outer(p_vals, bonferroni_alphas, "<")) > 0
       
-      
-      #browser()
       
       S_parametric_plugin <- est$parametric_plugin$S_parametric_plugin
       S_parametric_plugins[i] <- S_parametric_plugin
@@ -295,7 +258,6 @@ sim_rej_rate <- function(Tlen, L, B,
     }
     
     #print to see how far in loop
-    #if (verbose && i %% 10 == 0) 
       message(i)
   }
   
@@ -363,121 +325,3 @@ sim_rej_rate <- function(Tlen, L, B,
     
     return(output)
 }
-
-### ------- testing stuff ----- ###
-
-# d <- 4
-# A_matrix <- matrix(c(0.3, 0, 0, 0, 0.2, -0.3, 0.35, 0.7, -0.4, -0.6, 0.2, 0.5, 0.2, -0.4, 0.9, 0.3), byrow = T, nrow = 4)
-# theta1 <- c(0.6, 0.4, 0.4, 0.4)
-
-# theta2 <- matrix(
-#   c(1.4, 0,    0,    0,
-#     0.1, 1.1, -0.05, 0,
-#     0,   0.05, 0.9,  0.10,
-#     0,   0,   -0.05, 0.8),
-#   nrow = 4, byrow = TRUE
-# )
-# 
-# d <- 4
-# eigens <- diag(sort(runif(d, -1,1)), nrow = d)
-# P_mat <- matrix(rnorm(d * d), nrow = d)
-# 
-# A <- solve(P_mat) %*% eigens %*% P_mat %>% round(., 2)
-# 
-# Anull <- A
-# Anull[1, -1] <- 0
-# 
-# theta3 <- diag(4) * 0.5
-# # 
-# parameters = list(A_matrix = Anull,
-#                   theta = list(theta1 = theta1, theta2 = Anull, theta3 = theta3))
-# 
-# Tlen <- 2000
-# B <- floor(Tlen^(1/4))
-# L <- 10
-# 
-# test_run_AR <- sim_rej_rate(Tlen, L, B, DGP = "AR1", parameters = parameters, 
-#                             alphas = seq(0.01, 1, 0.01), repetitions = 200)
-# 
-# test_run_CIR <- sim_rej_rate(5000, 2, 2, DGP = "CIR", parameters = list(theta = theta),
-#                          alphas = seq(0.01, 1, 0.01), repetitions = 200)
-# 
-# test_run_AR$rejection_rate_df %>% ggplot(aes(x = alpha, y = rate_nonparametric)) + 
-#   geom_line() + 
-#   geom_abline(color = "red") + 
-#   ylim(0, 1)
-# 
-# test_run_CIR$rejection_rate_df %>% ggplot(aes(x = alpha, y = rate_nonparametric)) +
-#   geom_line() +
-#   geom_abline(color = "red") +
-#   ylim(0, 1)
-# 
-# T10 <- 10
-# L <- 2
-# A <- matrix(c(0.3, 0, 0, 0.2, 0.7, -0.4, -0.6, 0.9, 0.3), byrow = T, nrow = 3)
-# B <- 2
-# 
-# # data_test <- simulate_AR_process(Tlen, A)
-# # estimate_stat(data_test, L, B)
-# 
-# test_df_highdim_T10 <- sim_rej_rate(10, L = 2, B = 2, DGP, A_matrix = A, alphas = seq(0.1,1, 0.05), repetitions = 10,
-#                         remainder_true_ccfs = list(
-#                                           true_phi = function(x, u, A) char_func_cond_X_next_given_X_previous_mat(A, x, u),
-#                                           true_psi = function(x, u, A, t) {
-#                                             char_func_cond_Y_given_X_highdim_mat(A, t, x, u)
-#                                           }
-#                                         ),
-#                         parametric = TRUE)
-
-
-# T20 <- 20
-# test_df_highdim_T20 <- sim_rej_rate(T20, L, B, A, c(0.1, 0.2), repetitions = 12,
-#                                     remainder_true_ccfs = list(
-#                                       true_phi = function(x, u) char_func_cond_X_next_given_X_previous_mat(A, x, u),
-#                                       true_psi = function(x, u, t) {
-#                                         char_func_cond_Y_given_X_highdim_mat(A, t, x, u)
-#                                       }
-#                                     ))
-# 
-# T100 <- 100
-# test_df_highdim_T100 <- sim_rej_rate(T100, L, B, A, c(0.1, 0.2), repetitions = 12,
-#                                     remainder_true_ccfs = list(
-#                                       true_phi = function(x, u) char_func_cond_X_next_given_X_previous_mat(A, x, u),
-#                                       true_psi = function(x, u, t) {
-#                                         char_func_cond_Y_given_X_highdim_mat(A, t, x, u)
-#                                       }
-#                                     ))
-# 
-# A_small <- matrix(c(0.3, 0, -0.2, 0.7), byrow = T, nrow = 2)
-# #test_data <- simulate_AR_process(Tlen = 500, A = A_small)
-# test_df_1D <- sim_rej_rate(100, L = 10, B = 10, A_matrix = A_small, seq(0.01, 1, 0.01), repetitions = 100,
-#                            parametric = T,
-#                            remainder_true_ccfs = list(
-#                              true_phi = function(x, u, A) char_func_cond_X_next_given_X_previous_mat(A, x, u),
-#                              true_psi = function(x, u, A, t) {
-#                                char_func_cond_Y_given_X_highdim_mat(A, t, x, u)
-#                              }
-#                            ))
-# 
-# 
-# 
-# # true_psi(10, c(1,1), 1) %>% drop()
-# # 
-# # char_func_conditional_Y_given_X_highdim(A[1,1], A[-1,1], A[-1,-1], 10, 1, c(0.5, 0.4)) %>% drop
-# 
-# A_power <- matrix(c(-0.2, 0.6, 0.2, -0.7), byrow = T, nrow = 2) #under alternative
-# Tlen <- 100
-# L <- 5
-# B <- 5
-# 
-# test_df_power <- sim_rej_rate(Tlen, L, B,
-#                               A_small, seq(0.1, 1, 0.1),
-#                               repetitions = 1)
-# 
-# 
-# fit <- vars::VAR(test_df_power$data[[1]], p = 1, type = "const")
-# vars::causality(fit, cause = "Y1")$Granger
-# 
-# summary(fit$varresult$X)$coefficients
-# summary(fit$varresult$Y)$coefficients
-# 

@@ -8,7 +8,7 @@ fit_lgb <- function(X, y, num_round = 150, params = list(),
   
   # X covariates
   # y response
-  # objective is what kind of regression to do
+  # objective is what kind of regression to do, defaults to L2, ie MSE minimizing
   
   X_mat <- as.matrix(X)
   n <- nrow(X_mat) # number of observations
@@ -97,8 +97,6 @@ psi_hat <- function(training_X, training_Y , evaluation_X, nu, num_rounds, lgb_p
   # also used as covariates!
   
   # returns matrix of predictions based on lgbm-model
-  
-  # browser()
   
   N_train <- length(training_X)
   N_eval <- length(evaluation_X)
