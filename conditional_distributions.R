@@ -1,11 +1,11 @@
 ### conditional distributions in an AR(1) process where
 ### (X_t+1 , Y_t+1) = A(X_t, Y_t) + epsilon_t
-### where X_t is R-valued, Y_t is R^d-valued and epsilon is iid N(0, sigma^2I_d)
+### where X_t is R-valued, Y_t is R^d-valued and epsilon is iid N(0, sigma^2 * I_d)
 
 ### A is matrix decomposed as [[a, 0^T], [b, C]] where a is a scalar
 ### 0 is the R^d 0-vector, b is a R^d vector and C is dxd matrix
 
-## linearity yields that the conditional distributions are Gaussian 
+## linearity yields that the conditional distribution Y_t | X_t is Gaussian 
 ## with mean E(Y_t | X_t) and variance V(Y_t | X_t)
 
 
@@ -299,7 +299,7 @@ char_func_cond_Y_given_X_highdim_mat <- function(A, t, x_t, u, sigma_sq = 1) {
 
 ### --------- Stationary variance in VAR(1) process -------- ###
 stationary_covariance <- function(A, Sigma = diag(ncol(A)), maxiter = 1e4) {
-  # netcontrol::dlyap(t(A), Sigma)
+  # netcontrol::dlyap(t(A), Sigma) - old lyapunov solver
   
   sum <- matrix(0, nrow = ncol(A), ncol = ncol(A))
   Ai <- diag(ncol(A))
@@ -307,7 +307,7 @@ stationary_covariance <- function(A, Sigma = diag(ncol(A)), maxiter = 1e4) {
     term <- Ai %*% Sigma %*% t(Ai)
     sum <- sum + term
     
-    # early stopping: terms are negligible
+    # early stopping
     if (max(abs(term)) < 1e-12) break
     
     Ai <- Ai %*% A

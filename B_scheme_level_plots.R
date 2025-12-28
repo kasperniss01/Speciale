@@ -1,5 +1,7 @@
 #### Level anayslis for B scheme ####
 
+source("helper_functions.R")
+
 level_analysis_B_scheme <- comb_rej_rate_large_obj(
   readRDS("datasets/new_sims/VAR/L_10_Tlen_100_B_10.rds"),
   readRDS("datasets/new_sims/VAR/L_10_Tlen_200_baseline_gamma_0_B_14.rds"),

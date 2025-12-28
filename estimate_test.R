@@ -31,7 +31,6 @@ estimate_stat <- function(data, L, B,
   #convert input data to a data.frame
   #allows for multiple input types, in particular data of type ts - time-series
   
-  # browser()
   if(is.data.frame(data)) data <- data 
   else data <- data.frame(data)
   
@@ -87,7 +86,7 @@ estimate_stat <- function(data, L, B,
                        lgb_params,
                        objective)
     
-    ### empirical CF on evaluation for X
+    ### empirical complex exponential evaluation for X
     cc_X <- matrix(
       exp(1i * rep(mu, each = N_eval_phi) * rep(X_shifted_eval_phi, times = B)),
       nrow = N_eval_phi, ncol = B)
@@ -109,7 +108,7 @@ estimate_stat <- function(data, L, B,
                        lgb_params,
                        objective)
     
-    ### empirical CF on evaluation for Y
+    ### empirical complex exponential evaluation for Y
     cc_Y <- exp(1i * (Y_eval_psi %*% t(nu)))
     
     ### calculate residual terms
@@ -153,8 +152,6 @@ estimate_stat <- function(data, L, B,
     }
     
     if(parametric_plugin_AR1) {
-      
-      #browser()
       
       fit <- vars::VAR(data)
       A_parametric_plugin <- Acoef(fit)[[1]]
@@ -245,23 +242,3 @@ estimate_stat <- function(data, L, B,
   
   return(output)
 }
-
-
-# data_test <- simulate_AR_process(100, A)
-# test <- estimate_stat(data = data_test, L = 10, B = 2
-#               # remainder_true_ccfs = list(
-#               #   true_phi = function(x, u, A) char_func_cond_X_next_given_X_previous_mat(A, x, u),
-#               #   true_psi = function(x, u, A, t) char_func_cond_Y_given_X_mat(A, t, x, u)
-#               # )
-#             )
-# 
-# 
-# small_data <- simulate_AR_process(10, d = 3, A = matrix(c(0.1, rep(0, 3), rep(0.1, 12)), nrow = 4, byrow = T))
-# estimate_stat(small_data, 5, 2)
-# 
-# estimate_stat(my_X$discretized_path, 2, 2)
-
-
-
-
-

@@ -3,6 +3,9 @@
 # dZ_t = a(Z_t, t)dt + b(Z_t, t)dW_t
 
 #with user specific drift, a, and diffusion, b.
+
+#see also the 'SDE' package
+
 ###
 
 source("CIR_drift_diffusion.R")
@@ -14,10 +17,9 @@ simulate_sde <- function(Tlen, drift, diffusion, Z0, N = NULL,
   #Z0 is initial value, vector of length d
   #Tlen is length of chain
   #N is number of grid points 
-    # higher N gives better precision
-    # defaults 10 * Tlen
+    # higher N gives better precision, defaults to 10 * Tlen
   
-  #returns a timeseries object with the simulated solution
+  #returns a time series object with the simulated solution
   
   if (is.null(N)) N <- Tlen * 10
   if (N < Tlen) stop("N must be bigger than Tlen")
@@ -91,40 +93,3 @@ simulate_sde <- function(Tlen, drift, diffusion, Z0, N = NULL,
   
   return(out)
 }
-
-#testing
-d <- 3
-
-theta <- CIR_param(d = d, seed = 120, gamma = 0)
-theta1 <- theta$theta1
-theta2 <- theta$theta2
-theta3 <- theta$theta3
-
-# theta1 <- c(0.6, rep(0.4, d - 1))
-# theta2  <- diag(c(1.2, rep(1.0, d - 1)))
-# theta2[1, -1] <- 0
-# theta3 <- diag(d) * 0.5
-
-drift_z <- make_CIR_drift(theta1, theta2)
-diffusion_z <- make_CIR_diffusion(theta3)
-
-my_X <- simulate_sde(Tlen = 200, drift_z, diffusion_z, runif(4))
-
-
-plot(my_X$whole_path, main = "Full path")
-plot(my_X$discretized_path, main = "Discretized path")
-
-
-### using SDE package ###  
-# set.seed(123)
-# # dXt = (6-3*Xt)*dt + 2*sqrt(Xt)*dWt
-# d_x <- expression( 6-3*x )
-# s_x <- expression( 2*sqrt(x) )
-# 
-# sde::sde.sim(X0=2,drift=d_x, sigma=s_x, T = 10, N = 1000) -> X
-# plot(X,main="Cox-Ingersoll-Ross")
-# 
-# d_z <- expression(6-3*z)
-# s_z <- expression(2*sqrt(z))
-# 
-# d_z_mat <- function(z) 
