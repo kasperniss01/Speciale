@@ -103,3 +103,33 @@ make_ts_plot <- function(dat, title) {
       panel.spacing.y = unit(0.15, "lines")
     )
 }
+
+## print and summary functions for "hyp_test" class for testing hypothesis
+print.hyp_test <- function(x, ...) {
+  cat("Hypothesis test of H_0: \n")
+  cat("--------------\n")
+  cat(sprintf("Reject H0: %s\n", if (isTRUE(x$reject)) "YES" else "NO"))
+  cat(sprintf("p value:     %s\n", format(x$p_val)))
+  cat(sprintf("S hat:     %s\n", format(x$S_hat)))
+  cat(sprintf("Critical value:  %s\n", format(x$crit_value)))
+  cat(sprintf("Sign. level (alpha):     %s\n", format(x$alpha)))
+  invisible(x)
+}
+
+summary.hyp_test <- function(object, ...) {
+  tab <- data.frame(
+    Statistic = c("S_hat", "Critical value", "alpha", "Reject H0", "p value"),
+    Value = c(object$S_hat, object$crit_value, object$alpha, object$reject, object$p_val),
+    row.names = NULL
+  )
+  out <- list(call = object$call, table = tab)
+  class(out) <- "summary.hyp_test"
+  out
+}
+
+print.summary.hyp_test <- function(x, ...) {
+  cat("Summary of hypothesis test\n")
+  cat("--------------------------\n")
+  print(x$table, row.names = FALSE)
+  invisible(x)
+}
