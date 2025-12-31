@@ -8,9 +8,9 @@ test_hypothesis <- function(data, L, B, mu, nu, alpha) {
   #if H_0 is to be rejected or not
   #input: data, L integer: # of folds, B is # of evaluation points
   # mu and nu are evaluation points
-  #alpha is the desired significance level
+  # alpha is the desired significance level for the test
   
-  #output: list of class "hyp_test"
+  #output: list of class "hyp_test" with 
     # call, reject, p_val, S_hat, critical value and significance level
   est <- estimate_stat(
     data = data, 
@@ -32,7 +32,7 @@ test_hypothesis <- function(data, L, B, mu, nu, alpha) {
   #reject or not 
   reject <- S_hat > crits_alt #p_val <= alpha - equivalent
   
-  #outout
+  #output
   out <- list(
     call = match.call(),
     reject = reject,
