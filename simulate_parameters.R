@@ -5,26 +5,44 @@ runif(1)
 ### -------------- AR1 process ----------- ###
 
 # We require that the eigenvalues all lie within the unit circle #
-AR1_matrix <- function(d, maxiter = 1e4, seed, gamma,
-                       e = 1/sqrt(d) * rep(1, d),
+AR1_matrix <- function(d, maxiter = 1e4, seed = NULL, gamma,
+                       e_fun = NULL, 
+                       # e = 1/sqrt(d) * rep(1, d),
                        max_tries = 1e3) {
+  # d is dimension of whole process, 
+  # seed is for reproducible matrix
+  # gamma is to control deviation from H0 together with e_fun
+  # e_fun controls the last cols of the first row
   
-  old_seed <- .Random.seed
-  on.exit({ .Random.seed <<- old_seed })
-  set.seed(seed)
+  if (!is.null(seed)) {
+    old_seed <- .Random.seed
+    on.exit({ .Random.seed <<- old_seed })
+    set.seed(seed)
+  }
   
   for (k in 1:max_tries) {
-    eigens <- diag(sort(runif(d + 1, -1, 1)), nrow = d + 1)
+    eigens <- diag(sort(runif(d, -1, 1)), nrow = d)
+    # eigens <- diag(sort(runif(d + 1, -1, 1)), nrow = d + 1)
     
     for (i in 1:maxiter) {
-      P_mat <- matrix(rnorm((d + 1) * (d + 1)), nrow = d + 1)
+      P_mat <- matrix(rnorm(d * d), nrow = d)
+      # P_mat <- matrix(rnorm((d + 1) * (d + 1)), nrow = d + 1)
       if (det(P_mat) != 0) break
     }
     
     A <- solve(P_mat) %*% eigens %*% P_mat
-    A[1, -1] <- gamma * e
+    
+    #change the last (d-1) cols of the first row if e_fun is provided
+    if (!is.null(e_fun)) { 
+      e <- e_fun(d - 1)
+      A[1, -1] <- gamma * e
+    }
+    else {
+      warning("Value of gamma: ", gamma, " is disregarded")
+    }
     
     if (all(Mod(eigen(A)$values) < 1)) {
+      A <- A %>% round(2)
       return(A)
     }
   }

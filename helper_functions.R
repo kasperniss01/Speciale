@@ -72,7 +72,7 @@ comb_rej_rate_large_obj <- function(...) {
 }
 
 ## ggplot version of the multivariate time series plot
-make_ts_plot <- function(dat, title) {
+make_ts_plot <- function(dat, title = NULL) {
   df <- as.data.frame(dat)
   df$Time <- seq_len(nrow(df))
   
@@ -82,11 +82,11 @@ make_ts_plot <- function(dat, title) {
   long$series <- factor(
     long$series,
     levels = c("X", "Y1", "Y2", "Y3"),
-    labels = c("X", "Y^1", "Y^2", "Y^3")
+    labels = c("X", "Y^(1)", "Y^(2)", "Y^(3)")
   )
   
   ggplot(long, aes(x = Time, y = value)) +
-    geom_line() +
+    geom_line(linewidth = 0.25) +
     facet_grid(
       series ~ ., 
       scales = "free_y", 
@@ -107,6 +107,9 @@ make_ts_plot <- function(dat, title) {
 ## print and summary functions for "hyp_test" class for testing hypothesis
 print.hyp_test <- function(x, ...) {
   cat("Hypothesis test of H_0: \n")
+  indep <- "\u2AEB"   # ⫫  (DOUBLE UP TACK)
+  txt <- sprintf("X_{t+1} %s Y_t | X_t", indep)
+  cat(txt, "\n")
   cat("--------------\n")
   cat(sprintf("Reject H0: %s\n", if (isTRUE(x$reject)) "YES" else "NO"))
   cat(sprintf("p value:     %s\n", format(x$p_val)))
